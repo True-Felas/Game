@@ -1,6 +1,7 @@
 package juegoprog.sistema;
 
 import juegoprog.escenarios.EscenarioDistritoSombrio;
+import juegoprog.escenarios.ColisionesPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,10 +26,12 @@ public class Movimiento extends JPanel implements ActionListener {
     private int offsetX = 0;
     private int offsetY = 0;
     private EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario para ajustar colisiones
+    private ColisionesPanel colisiones; // 🔹 Referencia al panel de colisiones
 
-    public Movimiento(EscenarioDistritoSombrio escenario) {
+    public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones) {
         this.escenario = escenario;
-        setOpaque(false); // ✅ Permite ver el fondo sin taparlo
+        this.colisiones = colisiones; // 🔹 Guardamos la referencia al panel de colisiones
+        setOpaque(false);
         setFocusable(true);
 
         addKeyListener(new KeyAdapter() {
@@ -46,11 +49,8 @@ public class Movimiento extends JPanel implements ActionListener {
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                // 🔹 Capturamos la posición del ratón en coordenadas del mapa
                 ratonPos.x = e.getX() + offsetX;
                 ratonPos.y = e.getY() + offsetY;
-
-                // 🔹 Calculamos el ángulo correctamente
                 actualizarAngulo();
             }
         });
@@ -64,7 +64,6 @@ public class Movimiento extends JPanel implements ActionListener {
      * Corrige el problema de orientación cuando el mapa se mueve.
      */
     private void actualizarAngulo() {
-        // 🔹 Ajustamos el cálculo para que siempre sea relativo al centro de la pantalla
         ang = Math.atan2((ratonPos.y - offsetY) - SCREEN_HEIGHT / 2, (ratonPos.x - offsetX) - SCREEN_WIDTH / 2);
     }
 
@@ -97,20 +96,75 @@ public class Movimiento extends JPanel implements ActionListener {
     }
 
     private void movePlayer() {
-        int newX = offsetX;
-        int newY = offsetY;
+        int newOffsetX = offsetX;
+        int newOffsetY = offsetY;
+        int newPlayerX = SCREEN_WIDTH / 2; // 🔹 Mantiene al personaje en el centro por defecto
+        int newPlayerY = SCREEN_HEIGHT / 2;
 
-        if (up) newY -= velocidad;
-        if (down) newY += velocidad;
-        if (left) newX -= velocidad;
-        if (right) newX += velocidad;
+        boolean moved = false; // 🔹 Detecta si hubo movimiento real
 
-        // 🔹 Aplicamos restricciones de límites del mapa
-        newX = Math.max(0, Math.min(newX, escenario.getAncho() - SCREEN_WIDTH));
-        newY = Math.max(0, Math.min(newY, escenario.getAlto() - SCREEN_HEIGHT));
+        int margen = 200; // 🔹 Espacio dentro del cual el personaje puede moverse sin desplazar el fondo
 
-        offsetX = newX;
-        offsetY = newY;
+        // 🔹 Movimiento en Y (arriba/abajo)
+        if (up) {
+            if (offsetY > 0) {
+                newOffsetY -= velocidad;
+                moved = true;
+            } else if (newPlayerY > 0) {
+                newPlayerY -= velocidad;
+                moved = true;
+            }
+        }
+        if (down) {
+            if (offsetY < escenario.getAlto() - SCREEN_HEIGHT) {
+                newOffsetY += velocidad;
+                moved = true;
+            } else if (newPlayerY < SCREEN_HEIGHT) {
+                newPlayerY += velocidad;
+                moved = true;
+            }
+        }
+
+        // 🔹 Movimiento en X (izquierda/derecha)
+        if (left) {
+            if (offsetX > 0) {
+                newOffsetX -= velocidad;
+                moved = true;
+            } else if (newPlayerX > 0) {
+                newPlayerX -= velocidad;
+                moved = true;
+            }
+        }
+        if (right) {
+            if (offsetX < escenario.getAncho() - SCREEN_WIDTH) {
+                newOffsetX += velocidad;
+                moved = true;
+            } else if (newPlayerX < SCREEN_WIDTH) {
+                newPlayerX += velocidad;
+                moved = true;
+            }
+        }
+
+        // 🔹 Aplicamos las restricciones para no salir del mapa
+        newOffsetX = Math.max(0, Math.min(newOffsetX, escenario.getAncho() - SCREEN_WIDTH));
+        newOffsetY = Math.max(0, Math.min(newOffsetY, escenario.getAlto() - SCREEN_HEIGHT));
+
+        // 🔹 Si no hubo movimiento, no seguimos con el código (optimización)
+        if (!moved) return;
+
+        int colisionX = offsetX + SCREEN_WIDTH / 2;
+        int colisionY = offsetY + SCREEN_HEIGHT / 2;
+
+        if (colisiones != null && colisiones.getImagenColision() != null) {
+            int color = colisiones.getImagenColision().getRGB(offsetX + SCREEN_WIDTH / 2, offsetY + SCREEN_HEIGHT / 2);
+            boolean colision = colisiones.hayColision(offsetX + SCREEN_WIDTH / 2, offsetY + SCREEN_HEIGHT / 2);
+
+            System.out.println("🔍 Posición: (" + (offsetX + SCREEN_WIDTH / 2) + ", " + (offsetY + SCREEN_HEIGHT / 2) + ") - ¿Colisión? " + colision);
+            System.out.println("🎨 Color en la posición actual: " + Integer.toHexString(color));
+        }
+
+        offsetX = newOffsetX;
+        offsetY = newOffsetY;
 
         // 🔹 Asegurar que el fondo también se mueva con el offset
         escenario.actualizarOffset(offsetX, offsetY);
@@ -118,6 +172,11 @@ public class Movimiento extends JPanel implements ActionListener {
         // 🔹 Volvemos a calcular el ángulo para evitar que el personaje pierda la orientación al moverse
         actualizarRatonPos();
         actualizarAngulo();
+
+        // 🔹 Debug: Solo imprimimos si hubo cambio real
+        System.out.println("🎮 PlayerX: " + newPlayerX + " | PlayerY: " + newPlayerY);
+        System.out.println("🗺️ OffsetX: " + offsetX + " | OffsetY: " + offsetY);
+        System.out.println("📏 Tamaño del escenario -> Ancho: " + escenario.getAncho() + " | Alto: " + escenario.getAlto());
     }
 
     @Override

@@ -26,4 +26,14 @@ public abstract class BaseEscenario extends JPanel { // 🔹 Ahora hereda de JPa
         super.paintComponent(g);
         ;
     }
+
+    public int getAncho() {
+        return ancho;
+    }
+
+    public int getAlto() {
+        return alto;
+    }
+
+
 }
