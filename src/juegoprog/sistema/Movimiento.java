@@ -1,27 +1,36 @@
 package juegoprog.sistema;
 
+import juegoprog.escenarios.EscenarioDistritoSombrio;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-//Implementar ActionListener para poder detectar teclado y ratón
+/**
+ * Clase encargada del movimiento del personaje y de la cámara.
+ * Se asegura de que el fondo no tape el escenario y de que el personaje mire siempre al puntero.
+ * Implementa eventos de teclado y ratón según los apuntes sobre "Eventos y Escuchadores"
+ * (1.4. EVENTOS Y ESCUCHADORES.docx).
+ */
 public class Movimiento extends JPanel implements ActionListener {
-    private final int MAP_WIDTH = 3192;  // NUEVO: Definimos el tamaño real del mapa
-    private final int MAP_HEIGHT = 4096; // NUEVO: Definimos el tamaño real del mapa
-    private final int SCREEN_WIDTH = 1280; // Ancho de la ventana
-    private final int SCREEN_HEIGHT = 720;  // Alto de la ventana
-
-    private int playerX = MAP_WIDTH / 2, playerY = MAP_HEIGHT / 2; // NUEVO: El personaje inicia en el centro del mapa
+    private final int SCREEN_WIDTH = 1280;
+    private final int SCREEN_HEIGHT = 720;
     private int velocidad = 5;
     private double ang = 0;
     private boolean up, down, left, right;
-    private Point ratonPos = new Point(playerX, playerY);
 
-    private int offsetX = playerX - SCREEN_WIDTH / 2; // NUEVO: Desplazamiento de la cámara
-    private int offsetY = playerY - SCREEN_HEIGHT / 2; // NUEVO: Desplazamiento de la cámara
+    // 🔹 Punto de referencia para el ratón
+    private Point ratonPos = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
-    public Movimiento() {
+    private int offsetX = 0;
+    private int offsetY = 0;
+    private EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario para ajustar colisiones
+
+    public Movimiento(EscenarioDistritoSombrio escenario) {
+        this.escenario = escenario;
+        setOpaque(false); // ✅ Permite ver el fondo sin taparlo
         setFocusable(true);
+
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -33,17 +42,45 @@ public class Movimiento extends JPanel implements ActionListener {
                 toggleMovement(e.getKeyCode(), false);
             }
         });
+
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                ratonPos = new Point(e.getX() + offsetX, e.getY() + offsetY); // NUEVO: Ajustamos la posición del ratón al mapa
+                // 🔹 Capturamos la posición del ratón en coordenadas del mapa
+                ratonPos.x = e.getX() + offsetX;
+                ratonPos.y = e.getY() + offsetY;
+
+                // 🔹 Calculamos el ángulo correctamente
+                actualizarAngulo();
             }
         });
+
         Timer timer = new Timer(16, this);
         timer.start();
     }
 
-    //Asignación de teclas
+    /**
+     * 🔹 Calcula el ángulo exacto basándose en la posición global del ratón.
+     * Corrige el problema de orientación cuando el mapa se mueve.
+     */
+    private void actualizarAngulo() {
+        // 🔹 Ajustamos el cálculo para que siempre sea relativo al centro de la pantalla
+        ang = Math.atan2((ratonPos.y - offsetY) - SCREEN_HEIGHT / 2, (ratonPos.x - offsetX) - SCREEN_WIDTH / 2);
+    }
+
+    /**
+     * 🔹 Método para actualizar la posición del ratón RELATIVA al fondo en cada frame.
+     * Esto evita que el personaje "pierda" el puntero cuando el mapa se mueve.
+     */
+    private void actualizarRatonPos() {
+        PointerInfo pointerInfo = MouseInfo.getPointerInfo();
+        if (pointerInfo != null) {
+            Point puntoRaton = pointerInfo.getLocation();
+            SwingUtilities.convertPointFromScreen(puntoRaton, this);
+            ratonPos = new Point(puntoRaton.x + offsetX, puntoRaton.y + offsetY);
+        }
+    }
+
     private void toggleMovement(int keyCode, boolean pressed) {
         switch (keyCode) {
             case KeyEvent.VK_W -> up = pressed;
@@ -60,24 +97,27 @@ public class Movimiento extends JPanel implements ActionListener {
     }
 
     private void movePlayer() {
-        int newX = playerX;
-        int newY = playerY;
+        int newX = offsetX;
+        int newY = offsetY;
 
         if (up) newY -= velocidad;
         if (down) newY += velocidad;
         if (left) newX -= velocidad;
         if (right) newX += velocidad;
 
-        // NUEVO: Asegurar que el personaje no salga del mapa
-        if (newX >= 0 && newX <= MAP_WIDTH) playerX = newX;
-        if (newY >= 0 && newY <= MAP_HEIGHT) playerY = newY;
+        // 🔹 Aplicamos restricciones de límites del mapa
+        newX = Math.max(0, Math.min(newX, escenario.getAncho() - SCREEN_WIDTH));
+        newY = Math.max(0, Math.min(newY, escenario.getAlto() - SCREEN_HEIGHT));
 
-        // NUEVO: La cámara sigue al jugador
-        offsetX = playerX - SCREEN_WIDTH / 2;
-        offsetY = playerY - SCREEN_HEIGHT / 2;
+        offsetX = newX;
+        offsetY = newY;
 
-        // NUEVO: Calcula el ángulo entre el jugador y el cursor
-        ang = Math.atan2(ratonPos.y - playerY, ratonPos.x - playerX);
+        // 🔹 Asegurar que el fondo también se mueva con el offset
+        escenario.actualizarOffset(offsetX, offsetY);
+
+        // 🔹 Volvemos a calcular el ángulo para evitar que el personaje pierda la orientación al moverse
+        actualizarRatonPos();
+        actualizarAngulo();
     }
 
     @Override
@@ -85,25 +125,13 @@ public class Movimiento extends JPanel implements ActionListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // NUEVO: Fondo del mapa
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
-
-        // NUEVO: Dibujar cuadrícula para referencia visual
-        g.setColor(Color.DARK_GRAY);
-        for (int i = 0; i < MAP_WIDTH; i += 100) { // Líneas verticales cada 100px
-            g.drawLine(i - offsetX, 0, i - offsetX, MAP_HEIGHT);
-        }
-        for (int j = 0; j < MAP_HEIGHT; j += 100) { // Líneas horizontales cada 100px
-            g.drawLine(0, j - offsetY, MAP_WIDTH, j - offsetY);
-        }
-
-        // Dibujo del personaje en el centro de la pantalla
+        // 🔹 Dibujamos el personaje en el centro de la pantalla
         g2d.setColor(Color.RED);
-        int drawX = SCREEN_WIDTH / 2;  // Siempre en el centro de la pantalla
+        int drawX = SCREEN_WIDTH / 2;
         int drawY = SCREEN_HEIGHT / 2;
+
         g2d.translate(drawX, drawY);
-        g2d.rotate(ang);
+        g2d.rotate(ang);  // 🔹 Aplica la rotación exacta
         g2d.fillRect(-10, -10, 20, 20);
         g2d.rotate(-ang);
         g2d.translate(-drawX, -drawY);
