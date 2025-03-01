@@ -13,7 +13,7 @@ public class Pantalla extends JFrame {
         Movimiento movimiento = new Movimiento();
         add(movimiento);
 
-        setVisible(true); // Cambio 1: Solo llamamos a esto una vez
-        movimiento.requestFocus(); // Cambio 2 Enfoca correctamente el área de juego
+        setVisible(true); // Solo llamamos a esto una vez
+        movimiento.requestFocus(); // Enfoca correctamente el área de juego
     }
 }

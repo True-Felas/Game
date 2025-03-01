@@ -6,29 +6,22 @@ import java.awt.event.*;
 
 //Implementar ActionListener para poder detectar teclado y ratón
 public class Movimiento extends JPanel implements ActionListener {
-    private final int MAP_WIDTH = 3192;  // NUEVO: Definimos el ancho del mapa
-    private final int MAP_HEIGHT = 4096; // NUEVO: Definimos el alto del mapa
+    private final int MAP_WIDTH = 3192;  // NUEVO: Definimos el tamaño real del mapa
+    private final int MAP_HEIGHT = 4096; // NUEVO: Definimos el tamaño real del mapa
     private final int SCREEN_WIDTH = 1280; // Ancho de la ventana
     private final int SCREEN_HEIGHT = 720;  // Alto de la ventana
 
     private int playerX = MAP_WIDTH / 2, playerY = MAP_HEIGHT / 2; // NUEVO: El personaje inicia en el centro del mapa
-    private int velocidad = 5; // Cantidad de píxeles que se mueve el personaje en cada paso.
-    private double ang = 0; // Guarda el ángulo de dirección del personaje (para girarlo hacia el cursor).
+    private int velocidad = 5;
+    private double ang = 0;
     private boolean up, down, left, right;
-    private Point ratonPos = new Point(playerX, playerY); // Posición del ratón en el mapa.
-
-    /* Desplazamientos de la cámara, calculados para que el personaje siempre esté centrado en la pantalla.
-    *  Sin esto, el personaje se movería en la pantalla, pero no se desplazaría el mapa.
-    * La cámara sigue al personaje, moviendo el mundo en su contra.*/
+    private Point ratonPos = new Point(playerX, playerY);
 
     private int offsetX = playerX - SCREEN_WIDTH / 2; // NUEVO: Desplazamiento de la cámara
     private int offsetY = playerY - SCREEN_HEIGHT / 2; // NUEVO: Desplazamiento de la cámara
 
     public Movimiento() {
-        setFocusable(true); // Asegura que el panel puede recibir eventos de teclado.
-
-        // Registra cuándo presionamos (keyPressed) o soltamos (keyReleased) una tecla.
-        // Llama a toggleMovement() para actualizar si WASD está activado o no.
+        setFocusable(true);
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
