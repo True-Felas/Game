@@ -1,14 +1,16 @@
 package juegoprog.escenarios;
 
-import java.awt.Graphics;
+import javax.swing.*;
+import java.awt.*;
 
-public class BaseEscenario {
+public abstract class BaseEscenario extends JPanel { // 🔹 Ahora hereda de JPanel
     protected int ancho;
     protected int alto;
 
     public BaseEscenario(int ancho, int alto) {
         this.ancho = ancho;
         this.alto = alto;
+        setLayout(null); // 🔹 Permite posicionar elementos libremente en el panel
     }
 
     public void cargar() {
@@ -19,8 +21,9 @@ public class BaseEscenario {
         System.out.println("Actualizando escenario...");
     }
 
-    public void renderizar(Graphics g) {  // ✅ Ahora usa Graphics g
-        System.out.println("Dibujando escenario...");
+    @Override
+    protected void paintComponent(Graphics g) {  // ✅ Método correcto para dibujar en JPanel
+        super.paintComponent(g);
+        ;
     }
 }
-
