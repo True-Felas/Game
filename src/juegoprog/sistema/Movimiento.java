@@ -155,19 +155,20 @@ public class Movimiento extends JPanel implements ActionListener {
         int colisionX = offsetX + SCREEN_WIDTH / 2;
         int colisionY = offsetY + SCREEN_HEIGHT / 2;
 
-        if (colisiones != null && colisiones.getImagenColision() != null) {
-            int color = colisiones.getImagenColision().getRGB(offsetX + SCREEN_WIDTH / 2, offsetY + SCREEN_HEIGHT / 2);
-            boolean colision = colisiones.hayColision(offsetX + SCREEN_WIDTH / 2, offsetY + SCREEN_HEIGHT / 2);
+        if (colisiones != null) {
+            boolean colision = colisiones.hayColision(colisionX, colisionY, offsetX, offsetY);
 
-            System.out.println("🔍 Posición: (" + (offsetX + SCREEN_WIDTH / 2) + ", " + (offsetY + SCREEN_HEIGHT / 2) + ") - ¿Colisión? " + colision);
-            System.out.println("🎨 Color en la posición actual: " + Integer.toHexString(color));
+            System.out.println("🔍 Posición: (" + colisionX + ", " + colisionY + ") - ¿Colisión? " + colision);
         }
+
 
         offsetX = newOffsetX;
         offsetY = newOffsetY;
 
-        // 🔹 Asegurar que el fondo también se mueva con el offset
+        // 🔹 Asegurar que el fondo Y COLISIONES también se mueva con el offset
         escenario.actualizarOffset(offsetX, offsetY);
+        colisiones.actualizarOffset(offsetX, offsetY);
+
 
         // 🔹 Volvemos a calcular el ángulo para evitar que el personaje pierda la orientación al moverse
         actualizarRatonPos();

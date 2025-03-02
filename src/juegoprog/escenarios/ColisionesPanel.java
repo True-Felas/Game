@@ -2,10 +2,13 @@ package juegoprog.escenarios;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.io.InputStream;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
 
 /**
  * Panel para gestionar las colisiones en el juego.
@@ -16,17 +19,17 @@ public class ColisionesPanel extends JPanel {
 
     public ColisionesPanel() {
         setOpaque(false); // 🔹 Hacemos que el panel sea invisible
-        cargarImagenColision();
+        cargarImagenCollision();
     }
 
-    private void cargarImagenColision() {
+    private void cargarImagenCollision() {
         try {
-            URL recurso = getClass().getClassLoader().getResource("escenarios/colision_distrito_sombrio.png");
-            if (recurso != null) {
-                colisionesImg = ImageIO.read(recurso);
+            InputStream input = getClass().getClassLoader().getResourceAsStream("escenarios/colision_distrito_sombrio.png");
+            if (input != null) {
+                colisionesImg = ImageIO.read(input);
                 System.out.println("✅ Imagen de colisión cargada correctamente.");
             } else {
-                System.out.println("❌ Error: No se encontró la imagen de colisión.");
+                System.out.println("❌ No se encontró la imagen de colisión en el classpath.");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -40,24 +43,46 @@ public class ColisionesPanel extends JPanel {
      * @param y Coordenada Y en el mapa
      * @return `true` si el pixel no es transparente (colisión), `false` si es transparente (se puede caminar).
      */
-    public boolean hayColision(int x, int y) {
-        if (colisionesImg == null) return false;
+    public boolean hayColision(int x, int y, int offsetX, int offsetY) {
+        if (colisionesImg == null) return false; // Si la imagen no se cargó, no hay colisión
 
-        if (x < 0 || x >= colisionesImg.getWidth() || y < 0 || y >= colisionesImg.getHeight()) {
+        int colisionX = x - offsetX; // 🔹 Ajustamos la coordenada con el desplazamiento
+        int colisionY = y - offsetY;
+
+        // Validamos que esté dentro del rango de la imagen
+        if (colisionX < 0 || colisionX >= colisionesImg.getWidth() || colisionY < 0 || colisionY >= colisionesImg.getHeight()) {
+            System.out.println("❌ Fuera del rango de la imagen de colisión -> X: " + colisionX + " | Y: " + colisionY);
             return false;
         }
 
-        int pixel = colisionesImg.getRGB(x, y);
-        int alpha = (pixel >> 24) & 0xff;
+        // Obtenemos el color del píxel
+        int pixel = colisionesImg.getRGB(colisionX, colisionY);
+        int alpha = (pixel >> 24) & 0xff; // 🔹 Extraemos el canal alfa
 
-        // 🔹 DEPURACIÓN: Imprime el color exacto del píxel
-        System.out.println("🎨 Posición (" + x + ", " + y + ") - Color: " + Integer.toHexString(pixel) + " | Alpha: " + alpha);
+        // Debug: Imprimir si hay colisión o no
+        System.out.println("🎨 Posición: (" + colisionX + ", " + colisionY + ") - Color: " + Integer.toHexString(pixel) + " | Alfa: " + alpha);
 
-        return alpha > 0;
+        return alpha > 0; // 🔹 Si el alfa es mayor a 0, significa que hay colisión
     }
+
+
+
 
     public BufferedImage getImagenColision() {
         return colisionesImg;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (colisionesImg != null) {
+            g.drawImage(colisionesImg, 0, 0, this); // 🔹 Dibuja la imagen de colisión encima
+        }
+    }
+
+    public void actualizarOffset(int offsetX, int offsetY) {
+        setLocation(-offsetX, -offsetY); // 🔹 Ajustamos la posición del panel en relación con el fondo
+        repaint();
     }
 
 
