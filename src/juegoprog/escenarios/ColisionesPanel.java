@@ -62,7 +62,8 @@ public class ColisionesPanel extends JPanel {
         // Debug: Imprimir si hay colisión o no
         System.out.println("🎨 Posición: (" + colisionX + ", " + colisionY + ") - Color: " + Integer.toHexString(pixel) + " | Alfa: " + alpha);
 
-        return alpha > 0; // 🔹 Si el alfa es mayor a 0, significa que hay colisión
+        return alpha == 0;  // Invertimos la condición
+
     }
 
 
