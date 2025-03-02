@@ -152,14 +152,29 @@ public class Movimiento extends JPanel implements ActionListener {
         // 🔹 Si no hubo movimiento, no seguimos con el código (optimización)
         if (!moved) return;
 
-        int colisionX = offsetX + SCREEN_WIDTH / 2;
-        int colisionY = offsetY + SCREEN_HEIGHT / 2;
+        int colisionX = newOffsetX + SCREEN_WIDTH / 2;
+        int colisionY = newOffsetY + SCREEN_HEIGHT / 2;
+
 
         if (colisiones != null) {
-            boolean colision = colisiones.hayColision(colisionX, colisionY, offsetX, offsetY);
+            boolean colisionEnX = colisiones.hayColision(colisionX, offsetY, offsetX, offsetY);
+            boolean colisionEnY = colisiones.hayColision(offsetX, colisionY, offsetX, offsetY);
 
-            System.out.println("🔍 Posición: (" + colisionX + ", " + colisionY + ") - ¿Colisión? " + colision);
+            System.out.println("🛑 Verificando colisión...");
+            System.out.println("  ↳ Posición: (" + colisionX + ", " + colisionY + ")");
+            System.out.println("  ↳ ¿Colisión en X? " + colisionEnX);
+            System.out.println("  ↳ ¿Colisión en Y? " + colisionEnY);
+
+            if (colisionEnX) {
+                System.out.println("🚧 ¡COLISIÓN EN X! No puedes avanzar en esta dirección.");
+                newOffsetX = offsetX; // Bloquea solo el movimiento horizontal
+            }
+            if (colisionEnY) {
+                System.out.println("🚧 ¡COLISIÓN EN Y! No puedes avanzar en esta dirección.");
+                newOffsetY = offsetY; // Bloquea solo el movimiento vertical
+            }
         }
+
 
 
         offsetX = newOffsetX;
