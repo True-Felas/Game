@@ -50,6 +50,7 @@ public class Pantalla extends JFrame {
         colisiones = new ColisionesPanel();
         colisiones.setBounds(0, 0, 3192, 4096);
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
+        escenario.repaint();
 
         // 🔹 Capa 3: Movimiento (Personaje) - Se pasa la referencia del escenario y del sistema de colisiones
         // 🔹 Aseguramos que `Movimiento` se inicializa después del escenario para evitar problemas de referencia.
