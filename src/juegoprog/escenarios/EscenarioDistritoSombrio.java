@@ -11,6 +11,7 @@ public class EscenarioDistritoSombrio extends BaseEscenario {
     private BufferedImage imagenFondo;
     private int offsetX = 0;
     private int offsetY = 0;
+    private BufferedImage colisionesImg;
 
     public EscenarioDistritoSombrio() {
         super(3192, 4096);
@@ -32,19 +33,11 @@ public class EscenarioDistritoSombrio extends BaseEscenario {
         super.paintComponent(g);
 
         if (imagenFondo != null) {
-            // 🔹 Solo imprimimos si el offset ha cambiado desde la última vez
-            if (offsetX != lastOffsetX || offsetY != lastOffsetY) {
-                System.out.println("🎨 Dibujando imagen del escenario... OffsetX: " + offsetX + " | OffsetY: " + offsetY);
-
-                // 🔹 Actualizamos los valores para la próxima verificación
-                lastOffsetX = offsetX;
-                lastOffsetY = offsetY;
-            }
-
-            // 🔹 Dibuja la imagen del fondo en su nueva posición con el offset
-            g.drawImage(imagenFondo, -offsetX, -offsetY, this.getWidth(), this.getHeight(), this);
+            g.drawImage(imagenFondo, -offsetX, -offsetY, imagenFondo.getWidth(), imagenFondo.getHeight(), null);
         }
     }
+
+
 
 
 
@@ -71,8 +64,10 @@ public class EscenarioDistritoSombrio extends BaseEscenario {
     public void actualizarOffset(int x, int y) {
         this.offsetX = x;
         this.offsetY = y;
+        System.out.println("Escenario Offset: X=" + offsetX + ", Y=" + offsetY);
         repaint();
     }
+
 
     public int getAncho() {
         return 3192;

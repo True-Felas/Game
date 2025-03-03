@@ -7,32 +7,50 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-/**
- * Clase encargada del movimiento del personaje y de la cámara.
- * Se asegura de que el fondo no tape el escenario y de que el personaje mire siempre al puntero.
- * Implementa eventos de teclado y ratón según los apuntes sobre "Eventos y Escuchadores"
- * (1.4. EVENTOS Y ESCUCHADORES.docx).
- */
+/** Clase encargada del movimiento del personaje y de la cámara.
+ * - Se asegura de que el fondo no tape el escenario.
+ * - Permite que el personaje mire siempre al puntero.
+ * - Implementa eventos de teclado y ratón.
+ * - Según los apuntes de Soraya sobre "Eventos y Escuchadores"
+ *   (1.4. EVENTOS Y ESCUCHADORES.docx). */
+
 public class Movimiento extends JPanel implements ActionListener {
+
+    //---------------------------------------------------
+    //  🔹 ATRIBUTOS PRINCIPALES
+    //---------------------------------------------------
+
     private final int SCREEN_WIDTH = 1280;
     private final int SCREEN_HEIGHT = 720;
     private int velocidad = 5;
-    private double ang = 0;
-    private boolean up, down, left, right;
+    private double ang = 0; // 🔹 Ángulo de rotación basado en el puntero
+    private boolean up, down, left, right; // 🔹 Control de teclas presionadas
 
     // 🔹 Punto de referencia para el ratón
-    private Point ratonPos = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
-    private int offsetX = 0;
-    private int offsetY = 0;
-    private EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario para ajustar colisiones
+    private Point ratonPos = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+    private int offsetX = 0, offsetY = 0; // 🔹 Control de desplazamiento
+
+    private EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario
     private ColisionesPanel colisiones; // 🔹 Referencia al panel de colisiones
+
+    //---------------------------------------------------
+    //  🔹 CONSTRUCTOR DE MOVIMIENTO
+    //---------------------------------------------------
+
+    /** Captura eventos de teclado y ratón según los apuntes de "Eventos y Escuchadores"
+     * (1.4. EVENTOS Y ESCUCHADORES.docx).
+     *
+     * @param escenario Escenario en el que nos movemos.
+     * @param colisiones Panel de colisiones para detectar obstáculos. */
 
     public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones) {
         this.escenario = escenario;
-        this.colisiones = colisiones; // 🔹 Guardamos la referencia al panel de colisiones
+        this.colisiones = colisiones;
         setOpaque(false);
         setFocusable(true);
+
+        // 🔹 Escuchadores de teclado. Usamos KeyListener (apuntes).
 
         addKeyListener(new KeyAdapter() {
             @Override
@@ -46,6 +64,8 @@ public class Movimiento extends JPanel implements ActionListener {
             }
         });
 
+        // 🔹 Escuchador de movimiento del ratón. Usamos MouseMotionListener.
+
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -55,22 +75,26 @@ public class Movimiento extends JPanel implements ActionListener {
             }
         });
 
+        // 🔹 Temporizador para actualizar el movimiento del personaje.
+
         Timer timer = new Timer(16, this);
         timer.start();
     }
 
-    /**
-     * 🔹 Calcula el ángulo exacto basándose en la posición global del ratón.
-     * Corrige el problema de orientación cuando el mapa se mueve.
-     */
+    //---------------------------------------------------
+    //  🔹 MÉTODOS DE MOVIMIENTO Y CONTROL
+    //---------------------------------------------------
+
+    /** Calcula el ángulo exacto de rotación basándose en la posición del ratón.
+     * Corrige la orientación cuando el mapa se mueve. */
+
     private void actualizarAngulo() {
         ang = Math.atan2((ratonPos.y - offsetY) - SCREEN_HEIGHT / 2, (ratonPos.x - offsetX) - SCREEN_WIDTH / 2);
     }
 
-    /**
-     * 🔹 Método para actualizar la posición del ratón RELATIVA al fondo en cada frame.
-     * Esto evita que el personaje "pierda" el puntero cuando el mapa se mueve.
-     */
+    /** Metodo para actualizar la posición relativa del ratón al fondo en cada frame.
+     * Evita que el personaje "pierda" el puntero cuando el mapa se mueve, cosa importante */
+
     private void actualizarRatonPos() {
         PointerInfo pointerInfo = MouseInfo.getPointerInfo();
         if (pointerInfo != null) {
@@ -79,6 +103,9 @@ public class Movimiento extends JPanel implements ActionListener {
             ratonPos = new Point(puntoRaton.x + offsetX, puntoRaton.y + offsetY);
         }
     }
+/** Metodo para activar o desactivar el movimiento según la tecla presionada.
+ * @param keyCode Código de la tecla presionada.
+ * @param pressed Estado de la tecla (true si está presionada, false si se soltó). */
 
     private void toggleMovement(int keyCode, boolean pressed) {
         switch (keyCode) {
@@ -95,105 +122,59 @@ public class Movimiento extends JPanel implements ActionListener {
         repaint();
     }
 
+    //---------------------------------------------------
+    //  🔹 LÓGICA DE MOVIMIENTO Y COLISIONES
+    //---------------------------------------------------
+
     private void movePlayer() {
         int newOffsetX = offsetX;
         int newOffsetY = offsetY;
-        int newPlayerX = SCREEN_WIDTH / 2; // 🔹 Mantiene al personaje en el centro por defecto
-        int newPlayerY = SCREEN_HEIGHT / 2;
 
-        boolean moved = false; // 🔹 Detecta si hubo movimiento real
+        // 🔹 Coordenadas exactas del cuadro rojo
+        int personajeX = SCREEN_WIDTH / 2;  // Centro del personaje en pantalla
+        int personajeY = SCREEN_HEIGHT / 2;
+        int hitboxSize = 10;  // 🔹 Ajusta según el tamaño del personaje
 
-        int margen = 200; // 🔹 Espacio dentro del cual el personaje puede moverse sin desplazar el fondo
+        // 🔹 Comprobamos la colisión en el centro del personaje
+        boolean colisionArriba = colisiones.hayColision(personajeX, personajeY - hitboxSize, offsetX, offsetY);
+        boolean colisionAbajo = colisiones.hayColision(personajeX, personajeY + hitboxSize, offsetX, offsetY);
+        boolean colisionIzquierda = colisiones.hayColision(personajeX - hitboxSize, personajeY, offsetX, offsetY);
+        boolean colisionDerecha = colisiones.hayColision(personajeX + hitboxSize, personajeY, offsetX, offsetY);
 
-        // 🔹 Movimiento en Y (arriba/abajo)
-        if (up) {
-            if (offsetY > 0) {
-                newOffsetY -= velocidad;
-                moved = true;
-            } else if (newPlayerY > 0) {
-                newPlayerY -= velocidad;
-                moved = true;
-            }
+        // 🔹 Solo movemos si NO hay colisión en esa dirección
+        if (up && !colisionArriba) {
+            newOffsetY -= velocidad;
         }
-        if (down) {
-            if (offsetY < escenario.getAlto() - SCREEN_HEIGHT) {
-                newOffsetY += velocidad;
-                moved = true;
-            } else if (newPlayerY < SCREEN_HEIGHT) {
-                newPlayerY += velocidad;
-                moved = true;
-            }
+        if (down && !colisionAbajo) {
+            newOffsetY += velocidad;
         }
-
-        // 🔹 Movimiento en X (izquierda/derecha)
-        if (left) {
-            if (offsetX > 0) {
-                newOffsetX -= velocidad;
-                moved = true;
-            } else if (newPlayerX > 0) {
-                newPlayerX -= velocidad;
-                moved = true;
-            }
+        if (left && !colisionIzquierda) {
+            newOffsetX -= velocidad;
         }
-        if (right) {
-            if (offsetX < escenario.getAncho() - SCREEN_WIDTH) {
-                newOffsetX += velocidad;
-                moved = true;
-            } else if (newPlayerX < SCREEN_WIDTH) {
-                newPlayerX += velocidad;
-                moved = true;
-            }
+        if (right && !colisionDerecha) {
+            newOffsetX += velocidad;
         }
 
-        // 🔹 Aplicamos las restricciones para no salir del mapa
+        // 🔹 Aplicamos límites
         newOffsetX = Math.max(0, Math.min(newOffsetX, escenario.getAncho() - SCREEN_WIDTH));
         newOffsetY = Math.max(0, Math.min(newOffsetY, escenario.getAlto() - SCREEN_HEIGHT));
 
-        // 🔹 Si no hubo movimiento, no seguimos con el código (optimización)
-        if (!moved) return;
-
-        int colisionX = newOffsetX + SCREEN_WIDTH / 2;
-        int colisionY = newOffsetY + SCREEN_HEIGHT / 2;
-
-
-        if (colisiones != null) {
-            boolean colisionEnX = colisiones.hayColision(colisionX, offsetY, offsetX, offsetY);
-            boolean colisionEnY = colisiones.hayColision(offsetX, colisionY, offsetX, offsetY);
-
-            System.out.println("🛑 Verificando colisión...");
-            System.out.println("  ↳ Posición: (" + colisionX + ", " + colisionY + ")");
-            System.out.println("  ↳ ¿Colisión en X? " + colisionEnX);
-            System.out.println("  ↳ ¿Colisión en Y? " + colisionEnY);
-
-            if (colisionEnX) {
-                System.out.println("🚧 ¡COLISIÓN EN X! No puedes avanzar en esta dirección.");
-                newOffsetX = offsetX; // Bloquea solo el movimiento horizontal
-            }
-            if (colisionEnY) {
-                System.out.println("🚧 ¡COLISIÓN EN Y! No puedes avanzar en esta dirección.");
-                newOffsetY = offsetY; // Bloquea solo el movimiento vertical
-            }
+        // 🔹 Solo actualizamos si hay cambios
+        if (newOffsetX != offsetX || newOffsetY != offsetY) {
+            offsetX = newOffsetX;
+            offsetY = newOffsetY;
+            escenario.actualizarOffset(offsetX, offsetY);
+            colisiones.actualizarOffset(offsetX, offsetY);
         }
-
-
-
-        offsetX = newOffsetX;
-        offsetY = newOffsetY;
-
-        // 🔹 Asegurar que el fondo Y COLISIONES también se mueva con el offset
-        escenario.actualizarOffset(offsetX, offsetY);
-        colisiones.actualizarOffset(offsetX, offsetY);
-
-
-        // 🔹 Volvemos a calcular el ángulo para evitar que el personaje pierda la orientación al moverse
-        actualizarRatonPos();
-        actualizarAngulo();
-
-        // 🔹 Debug: Solo imprimimos si hubo cambio real
-        System.out.println("🎮 PlayerX: " + newPlayerX + " | PlayerY: " + newPlayerY);
-        System.out.println("🗺️ OffsetX: " + offsetX + " | OffsetY: " + offsetY);
-        System.out.println("📏 Tamaño del escenario -> Ancho: " + escenario.getAncho() + " | Alto: " + escenario.getAlto());
     }
+
+
+
+
+
+    //---------------------------------------------------
+    //  🔹 DIBUJADO DEL PERSONAJE
+    //---------------------------------------------------
 
     @Override
     protected void paintComponent(Graphics g) {
@@ -201,12 +182,13 @@ public class Movimiento extends JPanel implements ActionListener {
         Graphics2D g2d = (Graphics2D) g;
 
         // 🔹 Dibujamos el personaje en el centro de la pantalla
+
         g2d.setColor(Color.RED);
         int drawX = SCREEN_WIDTH / 2;
         int drawY = SCREEN_HEIGHT / 2;
 
         g2d.translate(drawX, drawY);
-        g2d.rotate(ang);  // 🔹 Aplica la rotación exacta
+        g2d.rotate(ang);
         g2d.fillRect(-10, -10, 20, 20);
         g2d.rotate(-ang);
         g2d.translate(-drawX, -drawY);
