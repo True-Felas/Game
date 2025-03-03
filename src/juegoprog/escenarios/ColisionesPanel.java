@@ -117,11 +117,10 @@ public class ColisionesPanel extends JPanel {
         super.paintComponent(g);
 
         if (colisionesImg != null) {
-            // 🔹 Aseguramos que se dibuja en la posición exacta
-            g.drawImage(colisionesImg, -offsetX, -offsetY, colisionesImg.getWidth(), colisionesImg.getHeight(), null);
+            // 🔹 Aseguramos que se dibuje con la misma posición que el fondo
+            g.drawImage(colisionesImg, -offsetX, -offsetY, this);
         }
     }
-
 
 
 

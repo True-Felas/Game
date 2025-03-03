@@ -130,46 +130,67 @@ public class Movimiento extends JPanel implements ActionListener {
         int newOffsetX = offsetX;
         int newOffsetY = offsetY;
 
-        // 🔹 Coordenadas exactas del cuadro rojo
-        int personajeX = SCREEN_WIDTH / 2;  // Centro del personaje en pantalla
+        int personajeX = SCREEN_WIDTH / 2;
         int personajeY = SCREEN_HEIGHT / 2;
-        int hitboxSize = 10;  // 🔹 Ajusta según el tamaño del personaje
+        int hitboxSize = 10;
 
-        // 🔹 Comprobamos la colisión en el centro del personaje
-        boolean colisionArriba = colisiones.hayColision(personajeX, personajeY - hitboxSize, offsetX, offsetY);
-        boolean colisionAbajo = colisiones.hayColision(personajeX, personajeY + hitboxSize, offsetX, offsetY);
-        boolean colisionIzquierda = colisiones.hayColision(personajeX - hitboxSize, personajeY, offsetX, offsetY);
-        boolean colisionDerecha = colisiones.hayColision(personajeX + hitboxSize, personajeY, offsetX, offsetY);
+        // 🔹 Verificamos si estamos en los límites del mapa
+        boolean enBordeIzquierdo = (offsetX == 0);
+        boolean enBordeDerecho = (offsetX == escenario.getAncho() - SCREEN_WIDTH);
+        boolean enBordeSuperior = (offsetY == 0);
+        boolean enBordeInferior = (offsetY == escenario.getAlto() - SCREEN_HEIGHT);
 
-        // 🔹 Solo movemos si NO hay colisión en esa dirección
+        // 🔹 Verificamos colisiones en los bordes
+        boolean colisionArriba = colisiones.hayColision(personajeX, personajeY - hitboxSize - velocidad, offsetX, offsetY);
+        boolean colisionAbajo = colisiones.hayColision(personajeX, personajeY + hitboxSize + velocidad, offsetX, offsetY);
+        boolean colisionIzquierda = colisiones.hayColision(personajeX - hitboxSize - velocidad, personajeY, offsetX, offsetY);
+        boolean colisionDerecha = colisiones.hayColision(personajeX + hitboxSize + velocidad, personajeY, offsetX, offsetY);
+
+        // 🔹 Movemos el escenario o el personaje dependiendo de la situación
         if (up && !colisionArriba) {
-            newOffsetY -= velocidad;
+            if (!enBordeSuperior) {
+                newOffsetY -= velocidad;
+            } else {
+                personajeY -= velocidad;  // 🔹 Movemos el personaje si no podemos mover el fondo
+            }
         }
         if (down && !colisionAbajo) {
-            newOffsetY += velocidad;
+            if (!enBordeInferior) {
+                newOffsetY += velocidad;
+            } else {
+                personajeY += velocidad;
+            }
         }
         if (left && !colisionIzquierda) {
-            newOffsetX -= velocidad;
+            if (!enBordeIzquierdo) {
+                newOffsetX -= velocidad;
+            } else {
+                personajeX -= velocidad;
+            }
         }
         if (right && !colisionDerecha) {
-            newOffsetX += velocidad;
+            if (!enBordeDerecho) {
+                newOffsetX += velocidad;
+            } else {
+                personajeX += velocidad;
+            }
         }
 
-        // 🔹 Aplicamos límites
+        // 🔹 Aplicamos restricciones de límites
         newOffsetX = Math.max(0, Math.min(newOffsetX, escenario.getAncho() - SCREEN_WIDTH));
         newOffsetY = Math.max(0, Math.min(newOffsetY, escenario.getAlto() - SCREEN_HEIGHT));
 
-        // 🔹 Solo actualizamos si hay cambios
+        // 🔹 Si el escenario aún puede moverse, actualizamos su desplazamiento
         if (newOffsetX != offsetX || newOffsetY != offsetY) {
             offsetX = newOffsetX;
             offsetY = newOffsetY;
             escenario.actualizarOffset(offsetX, offsetY);
             colisiones.actualizarOffset(offsetX, offsetY);
         }
+
+        // 🔹 Redibujamos el personaje para actualizar su posición
+        repaint();
     }
-
-
-
 
 
     //---------------------------------------------------
