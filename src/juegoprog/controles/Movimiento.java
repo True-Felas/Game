@@ -1,4 +1,4 @@
-package juegoprog.sistema;
+package juegoprog.controles;
 
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
@@ -19,7 +19,7 @@ public class Movimiento extends JPanel implements ActionListener {
         /** CONSTANTES Y CONFIGURACIÓN */
 
         private final int SCREEN_WIDTH = 1280, SCREEN_HEIGHT = 720; // 🔹 Tamaño de la pantalla
-        private int velocidad = 6; // 🔹 Velocidad de movimiento
+        private int velocidad = 4; // 🔹 Velocidad de movimiento
 
         /** CONTROL DE MOVIMIENTO */
 
@@ -49,9 +49,18 @@ public class Movimiento extends JPanel implements ActionListener {
             setOpaque(false);
             setFocusable(true);
 
+            // 🔹 Establecer desplazamiento inicial
+            this.desplazamientoX = 640;
+            this.desplazamientoY = 360;
+
+            // 🔹 Asegurar que el escenario y colisiones empiecen en la posición correcta
+            escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY);
+            colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
+
             configurarEventos();
             iniciarTemporizador();
         }
+
 
         /** Registra los eventos de teclado y ratón. */
 
@@ -75,7 +84,9 @@ public class Movimiento extends JPanel implements ActionListener {
         /** Inicia el temporizador para actualizar el movimiento. */
 
         private void iniciarTemporizador() {
-            new Timer(16, this).start();
+            Timer timer = new Timer(12, this);
+            timer.setInitialDelay(12);  // 🔹 Asegura que no haya una aceleración inicial
+            timer.start();
         }
 
     //---------------------------------------------------

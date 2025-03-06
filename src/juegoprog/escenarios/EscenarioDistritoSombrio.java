@@ -15,8 +15,8 @@ import java.net.URL;
     //  🔹 CONSTANTES DEL ESCENARIO
     //---------------------------------------------------
 
-    private final int ANCHO = 3192;
-    private final int ALTO = 4096;
+    private final int ANCHO = 4472;
+    private final int ALTO = 4816;
 
     //---------------------------------------------------
     //  🔹 ATRIBUTOS PRINCIPALES
@@ -30,7 +30,7 @@ import java.net.URL;
     //----------------------------------------------------------------
 
     public EscenarioDistritoSombrio() {
-        super(3192, 4096);
+        super(4472, 4816);
         setSize(ANCHO, ALTO);
         setPreferredSize(new Dimension(ANCHO, ALTO));
         setVisible(true);

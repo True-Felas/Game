@@ -3,7 +3,7 @@ package juegoprog.graficos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.sistema.MenuPrincipal;
-import juegoprog.sistema.Movimiento;
+import juegoprog.controles.Movimiento;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,12 +43,12 @@ public class Pantalla extends JFrame {
 
         // 🔹 Fondo del escenario
         escenario = new EscenarioDistritoSombrio();
-        escenario.setBounds(0, 0, 3192, 4096);
+        escenario.setBounds(0, 0, 4472, 4816);
         capaJuego.add(escenario, JLayeredPane.DEFAULT_LAYER);
 
         // 🔹 PNG de colisiones
         colisiones = new ColisionesPanel();
-        colisiones.setBounds(0, 0, 3192, 4096);
+        colisiones.setBounds(0, 0, 4472, 4816);
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
         // 🔹 Movimiento (Personaje), pasando referencias de escenario y colisiones
