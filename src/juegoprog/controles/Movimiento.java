@@ -19,7 +19,7 @@ public class Movimiento extends JPanel implements ActionListener {
         /** CONSTANTES Y CONFIGURACIÓN */
 
         private final int SCREEN_WIDTH = 1280, SCREEN_HEIGHT = 720; // 🔹 Tamaño de la pantalla
-        private int velocidad = 5; // 🔹 Velocidad de movimiento
+        private int velocidad = 6; // 🔹 Velocidad de movimiento
 
         /** CONTROL DE MOVIMIENTO */
 
@@ -144,11 +144,25 @@ public class Movimiento extends JPanel implements ActionListener {
             boolean colisionIzquierda = colisiones.hayColision(personajeX - hitboxSize - velocidad, personajeY);
             boolean colisionDerecha = colisiones.hayColision(personajeX + hitboxSize + velocidad, personajeY);
 
-            // 🔹 Calcular nuevo desplazamiento según la dirección del movimiento
-            if (up && !colisionArriba) newDesplazamientoY -= velocidad;
-            if (down && !colisionAbajo) newDesplazamientoY += velocidad;
-            if (left && !colisionIzquierda) newDesplazamientoX -= velocidad;
-            if (right && !colisionDerecha) newDesplazamientoX += velocidad;
+            // 🔹 Calcular el desplazamiento en X e Y según las teclas presionadas
+            double moveX = 0;
+            double moveY = 0;
+
+            if (up && !colisionArriba) moveY -= velocidad;
+            if (down && !colisionAbajo) moveY += velocidad;
+            if (left && !colisionIzquierda) moveX -= velocidad;
+            if (right && !colisionDerecha) moveX += velocidad;
+
+            // 🔹 Normalizar el movimiento diagonal
+            double length = Math.sqrt(moveX * moveX + moveY * moveY);
+            if (length > 0) {
+                moveX = (moveX / length) * velocidad;  // Normalizar X
+                moveY = (moveY / length) * velocidad;  // Normalizar Y
+            }
+
+            // 🔹 Aplicar el movimiento normalizado
+            newDesplazamientoX += (int) moveX;
+            newDesplazamientoY += (int) moveY;
 
             // 🔹 Aplicar límites para que el mapa no se salga de los bordes
             newDesplazamientoX = Math.max(0, Math.min(newDesplazamientoX, escenario.getAncho() - SCREEN_WIDTH));
