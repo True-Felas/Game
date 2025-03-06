@@ -1,5 +1,7 @@
 package juegoprog.sistema;
 
+import juegoprog.graficos.Pantalla;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

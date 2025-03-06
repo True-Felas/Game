@@ -1,4 +1,4 @@
-package juegoprog.sistema;
+package juegoprog.controles;
 
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
