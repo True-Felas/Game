@@ -1,79 +1,102 @@
 package juegoprog.escenarios;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 
-public class EscenarioDistritoSombrio extends BaseEscenario {
-    private BufferedImage imagenFondo;
-    private int offsetX = 0;
-    private int offsetY = 0;
-    private BufferedImage colisionesImg;
+    /** Representa el escenario de "Distrito Sombrío", gestionando su fondo y desplazamiento.
+    *   Extiende `BaseEscenario` para manejar dimensiones y comportamiento del mapa. */
+
+    public class EscenarioDistritoSombrio extends BaseEscenario {
+
+    //---------------------------------------------------
+    //  🔹 CONSTANTES DEL ESCENARIO
+    //---------------------------------------------------
+
+    private final int ANCHO = 3192;
+    private final int ALTO = 4096;
+
+    //---------------------------------------------------
+    //  🔹 ATRIBUTOS PRINCIPALES
+    //---------------------------------------------------
+
+    private BufferedImage imagenFondo; // 🔹 Imagen del escenario
+    private int desplazamientoX = 0, desplazamientoY = 0; // 🔹 Control del desplazamiento
+
+    //----------------------------------------------------------------
+    //  🔹 CONSTRUCTOR - CONFIGURA TAMAÑO DEL ESCENARIO Y CARGA IMAGEN
+    //----------------------------------------------------------------
 
     public EscenarioDistritoSombrio() {
         super(3192, 4096);
-
-        // 🔹 Aseguramos que el panel tenga el tamaño correcto y sea visible
-        setSize(3192, 4096);
-        setPreferredSize(new Dimension(3192, 4096));
+        setSize(ANCHO, ALTO);
+        setPreferredSize(new Dimension(ANCHO, ALTO));
         setVisible(true);
 
-        inicializar();
+        cargarImagen();
     }
 
-    // Variables para almacenar el último offset impreso
-    private int lastOffsetX = -1;
-    private int lastOffsetY = -1;
+    //---------------------------------------------------
+    //  🔹 DIBUJA EL ESCENARIO APLICANDO EL DESPLAZAMIENTO
+    //---------------------------------------------------
+
+    /** Dibuja el fondo del escenario en la pantalla, aplicando el
+     *  desplazamiento según la posición del jugador. */
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
         if (imagenFondo != null) {
-            g.drawImage(imagenFondo, -offsetX, -offsetY, imagenFondo.getWidth(), imagenFondo.getHeight(), null);
+            g.drawImage(imagenFondo, -desplazamientoX, -desplazamientoY, null);
         }
     }
 
+    //---------------------------------------------------
+    //  🔹 METODO PARA CARGAR LA IMAGEN DEL ESCENARIO
+    //---------------------------------------------------
 
-
-
-
-
-    private void inicializar() {
-        cargarImagen();
-    }
+    /** Carga la imagen del escenario desde los recursos del proyecto.
+    *   Se utiliza `getResource()` porque funciona bien con archivos dentro del JAR. */
 
     private void cargarImagen() {
         try {
-            URL recurso = getClass().getClassLoader().getResource("escenarios/distrito_sombrio.png");
-            if (recurso != null) {
-                imagenFondo = ImageIO.read(recurso);
-                System.out.println("✅ Imagen del escenario cargada correctamente.");
-            } else {
-                System.out.println("❌ Error: No se encontró la imagen del escenario.");
+            URL url = getClass().getResource("/escenarios/distrito_sombrio.png");
+            if (url == null) {
+                System.err.println("❌ Imagen del escenario no encontrada.");
+                return;
             }
+            imagenFondo = ImageIO.read(url);
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("❌ Error al cargar la imagen del escenario.");
+            System.err.println("❌ Error al cargar la imagen del escenario: " + e.getMessage());
         }
     }
 
-    public void actualizarOffset(int x, int y) {
-        this.offsetX = x;
-        this.offsetY = y;
-        System.out.println("Escenario Offset: X=" + offsetX + ", Y=" + offsetY);
+    //---------------------------------------------------
+    //  🔹 METODO PARA CARGAR LA IMAGEN DEL ESCENARIO
+    //---------------------------------------------------
+
+    /** Actualiza el desplazamiento del escenario según la posición del personaje. */
+
+    public void actualizarDesplazamiento(int x, int y) {
+        this.desplazamientoX = x;
+        this.desplazamientoY = y;
         repaint();
     }
 
+    //---------------------------------------------------
+    //  🔹 MÉTODOS GETTERS
+    //---------------------------------------------------
 
+    /** Retorna el ancho del escenario. */
     public int getAncho() {
-        return 3192;
+        return ANCHO;
     }
 
+    /** Retorna la altura del escenario. */
     public int getAlto() {
-        return 4096;
+        return ALTO;
     }
 }

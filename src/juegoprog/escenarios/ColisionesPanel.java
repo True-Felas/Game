@@ -5,61 +5,59 @@ import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.io.InputStream;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 
-/** Clase que gestiona las colisiones en el juego.
- * Se basa en una imagen donde las áreas sin transparencias representan "obstáculos".
- * Implementa el concepto de detección de colisiones por imagen, lo cual vimos es un metodo usado en juegos 2D. */
+
+/** Gestiona las colisiones en el juego mediante una imagen.
+ *  Las áreas opacas representan obstáculos en el mapa.
+ *  Usa detección de colisiones basada en imágenes, común en juegos 2D. */
+
 
 public class ColisionesPanel extends JPanel {
 
     //---------------------------------------------------
     //  🔹 ATRIBUTOS PRINCIPALES
     //---------------------------------------------------
-    private BufferedImage colisionesImg; // Imagen que contiene la información de colisión
+
+    // Imagen en PNG que define las áreas de colisión
+    private BufferedImage colisionesImg;
+
+    // Desplazamiento del mapa de colisiones para poder sincronizarlo con el escenario
+    private int desplazamientoX = 0;
+    private int desplazamientoY = 0;
+
 
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR
     //---------------------------------------------------
 
+    /** Inicializamos el panel de colisiones y cargamos la imagen de colisión.
+     *  El panel es transparente para que no cubra el escenario. */
+
     public ColisionesPanel() {
-        setOpaque(false); // Hacemos que el panel sea transparente para que no tape la imagen del escenario
-        cargarImagenCollision(); // Cargamos la imagen de colisión al iniciar
+
+        setOpaque(false);
+        cargarImagenCollision();
     }
 
     //---------------------------------------------------
     //  🔹 METODO PARA CARGAR LA IMAGEN DE COLISIÓN
     //---------------------------------------------------
 
+    /** Carga la imagen de colisión desde los recursos y la almacena como `BufferedImage`.
+     *  Usa `ImageIO.read()` (compatible con PNG) para leer la imagen directamente sin necesidad de conversión extra.
+     *  Si la imagen no se encuentra, muestra un error en la consola.  */
+
     private void cargarImagenCollision() {
         try {
-            // Cargamos la imagen desde la carpeta de recursos
-
-            InputStream input = getClass().getClassLoader().getResourceAsStream("escenarios/colision_distrito_sombrio.png");
-            if (input != null) {
-                BufferedImage imagenOriginal = ImageIO.read(input);
-
-                // 🔹 Convertimos la imagen a un formato que soporte Alfa (transparencia)
-
-                colisionesImg = new BufferedImage(
-                        imagenOriginal.getWidth(),
-                        imagenOriginal.getHeight(),
-                        BufferedImage.TYPE_INT_ARGB // 🔹 Aseguramos que tenga Canal Alfa
-                );
-
-                Graphics2D g2d = colisionesImg.createGraphics();
-                g2d.drawImage(imagenOriginal, 0, 0, null);
-                g2d.dispose();
-
-                System.out.println("✅ Imagen de colisión cargada correctamente con Alfa.");
-            } else {
-                System.out.println("❌ No se encontró la imagen de colisión en el classpath.");
+            URL url = getClass().getResource("/escenarios/colision_distrito_sombrio.png");
+            if (url == null) {
+                System.err.println("❌ Imagen de colisión no encontrada.");
+                return;
             }
+            colisionesImg = ImageIO.read(url);
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("❌ Error al cargar la imagen de colisión.");
+            System.err.println("❌ Error al cargar la imagen de colisión: " + e.getMessage());
         }
     }
 
@@ -67,74 +65,61 @@ public class ColisionesPanel extends JPanel {
     //  🔹 METODO PARA VERIFICAR COLISIÓN EN UNA POSICIÓN DADA
     //---------------------------------------------------
 
-    /** Verifica si una posición del mapa es transitable o no.
-     * Se basa en el canal alfa de la imagen de colisión.
-     *
-     * @param x Coordenada X en el mapa
-     * @param y Coordenada Y en el mapa
-     * @param offsetX Desplazamiento horizontal del mapa
-     * @param offsetY Desplazamiento vertical del mapa
-     * @return `true` si el píxel no es transparente (hay colisión), `false` si es transparente (se puede caminar). */
+    /** Verificamos si una posición del mapa tiene colisión o es transitable.
+     *  Se basa en la transparencia (canal alfa) de la imagen de colisión.
+     *  x Coordenada X en el mapa
+     *  y Coordenada Y en el mapa
+     *  Return: `true` si hay colisión (píxel no transparente), `false` si es transitable. */
 
-    public boolean hayColision(int x, int y, int offsetX, int offsetY) {
+    public boolean hayColision(int x, int y) {
         if (colisionesImg == null) return false;
 
-        // 🔹 Calculamos la posición en la imagen de colisiones
-        int colisionX = (x + offsetX);
-        int colisionY = (y + offsetY);
+        int colisionX = x + desplazamientoX;
+        int colisionY = y + desplazamientoY;
 
-        // 🔹 Comprobamos si está dentro del rango de la imagen
-        if (colisionX < 0 || colisionX >= colisionesImg.getWidth() || colisionY < 0 || colisionY >= colisionesImg.getHeight()) {
-            System.out.println("⚠️ Fuera del rango de colisión -> X: " + colisionX + " | Y: " + colisionY);
+        // Verificar si está dentro de los límites
+        if (colisionX < 0 || colisionX >= colisionesImg.getWidth() ||
+                colisionY < 0 || colisionY >= colisionesImg.getHeight()) {
             return false;
         }
 
-        // 🔹 Obtenemos el color del píxel
-        int pixel = colisionesImg.getRGB(colisionX, colisionY);
-        int alpha = (pixel >> 24) & 0xff;
+        // Obtener la transparencia del píxel
+        int alpha = (colisionesImg.getRGB(colisionX, colisionY) >> 24) & 0xff;
 
-        // 🔹 Depuración
-        System.out.println("🎨 Posición real: (" + colisionX + ", " + colisionY + ") - Color: " + Integer.toHexString(pixel) + " | Alfa: " + alpha);
+        // Solo imprimir si hay colisión
+        if (alpha > 0) {
+            System.out.println("🎨 COLISIÓN en (" + colisionX + ", " + colisionY + ") | Alfa: " + alpha);
+        }
 
         return alpha > 0;
-    }
-
-
-    //---------------------------------------------------
-    //  🔹 METODO PARA OBTENER LA IMAGEN DE COLISIÓN
-    //---------------------------------------------------
-
-    public BufferedImage getImagenColision() {
-        return colisionesImg;
     }
 
     //---------------------------------------------------
     //  🔹 METODO PARA DIBUJAR LA CAPA DE COLISIONES (DEBUG)
     //---------------------------------------------------
+    /** Dibuja la imagen de colisión en el panel, desplazándola según el
+     * movimiento del fondo. Esto nos asegura que el mapa de colisiones
+     * siempre coincida con el escenario. */
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
         if (colisionesImg != null) {
-            // 🔹 Aseguramos que se dibuje con la misma posición que el fondo
-            g.drawImage(colisionesImg, -offsetX, -offsetY, this);
+            g.drawImage(colisionesImg, -desplazamientoX, -desplazamientoY, this);
         }
     }
-
-
 
     //---------------------------------------------------
     //  🔹 METODO PARA ACTUALIZAR LA POSICIÓN DE LA CAPA DE COLISIONES
     //---------------------------------------------------
-    int offsetX = 0;
-    int offsetY = 0;
+
+    /** Actualiza el desplazamiento del mapa de colisiones para que coincida
+     *  con el escenario. Luego repinta el panel para reflejar estos cambios. */
+
     public void actualizarOffset(int offsetX, int offsetY) {
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
-        System.out.println("Colisiones Offset: X=" + offsetX + ", Y=" + offsetY);
+        this.desplazamientoX = offsetX;
+        this.desplazamientoY = offsetY;
         repaint();
     }
-
 
 }
