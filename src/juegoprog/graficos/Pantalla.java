@@ -1,25 +1,26 @@
 package juegoprog.graficos;
 
-import juegoprog.controles.Movimiento;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.sistema.MenuPrincipal;
+import juegoprog.sistema.Movimiento;
 
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Clase principal de la ventana del juego.
- * Implementa CardLayout para gestionar los cambios de pantalla, como se indica en los apuntes de la profesora
- * sobre "Usos de CardLayout" (1.6. Usos de CardLayout.docx).
- */
+    /** Gestiona la ventana principal del juego, utilizando
+     *  CardLayout para cambiar entre pantallas como vimos en los ejemplos.
+     *  Implementa capas (`JLayeredPane`) para manejar la superposición de elementos. */
+
 public class Pantalla extends JFrame {
-    private CardLayout cardLayout;
-    private JPanel contenedorPrincipal;
-    private JLayeredPane capaJuego;
-    private Movimiento movimiento;
-    private EscenarioDistritoSombrio escenario;
-    private ColisionesPanel colisiones;
+    private final CardLayout cardLayout;
+    private final JPanel contenedorPrincipal;
+    private final JLayeredPane capaJuego;
+    private final Movimiento movimiento;
+    private final EscenarioDistritoSombrio escenario;
+    private final ColisionesPanel colisiones;
+
+    /** Configura la ventana del juego, las pantallas y las capas de la interfaz. */
 
     public Pantalla() {
         setTitle("Juego - Pantalla Principal");
@@ -28,57 +29,47 @@ public class Pantalla extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
 
-        // 🔹 Se usa CardLayout para manejar múltiples pantallas en un solo JFrame.
-        // 🔹 Esto sigue los apuntes sobre "Distribución de paneles y Layouts" (1.3. Distribución paneles_ Principales Layout.docx).
+        // 🔹 Configuración de CardLayout para gestionar pantallas
         cardLayout = new CardLayout();
         contenedorPrincipal = new JPanel(cardLayout);
         setContentPane(contenedorPrincipal);
 
-        // 🔹 Menú Principal (primera pantalla al iniciar el juego)
-        MenuPrincipal menu = new MenuPrincipal(this);
-        contenedorPrincipal.add(menu, "MENU");
+        // 🔹 Menú principal
+        contenedorPrincipal.add(new MenuPrincipal(this), "MENU");
 
-        // 🔹 Configuramos la pantalla de juego con JLayeredPane para manejar capas
+        // 🔹 Configuración de la pantalla de juego con capas
         capaJuego = new JLayeredPane();
         capaJuego.setPreferredSize(new Dimension(1280, 720));
 
-        // 🔹 Capa 1: Fondo del escenario
+        // 🔹 Fondo del escenario
         escenario = new EscenarioDistritoSombrio();
         escenario.setBounds(0, 0, 3192, 4096);
         capaJuego.add(escenario, JLayeredPane.DEFAULT_LAYER);
-        escenario.repaint(); // 🔹 Forzamos la actualización para evitar que se quede en blanco
 
-        // 🔹 Capa 2: PNG de colisiones
+        // 🔹 PNG de colisiones
         colisiones = new ColisionesPanel();
         colisiones.setBounds(0, 0, 3192, 4096);
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
-        escenario.repaint();
 
-        // 🔹 Capa 3: Movimiento (Personaje) - Se pasa la referencia del escenario y del sistema de colisiones
-        // 🔹 Aseguramos que `Movimiento` se inicializa después del escenario para evitar problemas de referencia.
+        // 🔹 Movimiento (Personaje), pasando referencias de escenario y colisiones
         movimiento = new Movimiento(escenario, colisiones);
         movimiento.setBounds(0, 0, 1280, 720);
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
-        // 🔹 Agregamos la capa de juego a CardLayout
+        // 🔹 Agregar la pantalla de juego al contenedor de pantallas
         contenedorPrincipal.add(capaJuego, "JUEGO");
 
         setVisible(true);
     }
 
-    /**
-     * Método para cambiar entre pantallas (Menú, Juego).
-     * Se usa invokeLater() para asegurar que Movimiento reciba el foco correctamente después del cambio.
-     * Explicado en los apuntes sobre "Eventos y Escuchadores" (1.4. EVENTOS Y ESCUCHADORES.docx).
-     *
-     * @param pantalla Nombre de la pantalla a la que queremos cambiar ("MENU" o "JUEGO").
-     */
+    /** Cambia entre pantallas (Menú o Juego) dentro del CardLayout.
+     *  Si se cambia a "JUEGO", asegura que `Movimiento` reciba el foco. */
+
     public void cambiarPantalla(String pantalla) {
         cardLayout.show(contenedorPrincipal, pantalla);
 
-        // 🔹 Cuando pasamos a la pantalla de juego, aseguramos que Movimiento reciba el foco
-        if (pantalla.equals("JUEGO")) {
-            SwingUtilities.invokeLater(() -> movimiento.requestFocusInWindow());
+        if ("JUEGO".equals(pantalla)) {
+            SwingUtilities.invokeLater(movimiento::requestFocusInWindow);
         }
     }
 }
