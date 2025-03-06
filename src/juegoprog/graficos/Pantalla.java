@@ -1,7 +1,9 @@
-package juegoprog.sistema;
+package juegoprog.graficos;
 
+import juegoprog.controles.Movimiento;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.sistema.MenuPrincipal;
 
 import javax.swing.*;
 import java.awt.*;
