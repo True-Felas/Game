@@ -2,6 +2,8 @@ package juegoprog.controles;
 
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.jugador.Personaje;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -36,16 +38,20 @@ public class Movimiento extends JPanel implements ActionListener {
         private final EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario
         private final ColisionesPanel colisiones; // 🔹 Referencia al panel de colisiones
 
-    //--------------------------------------------------------
+        // Agrega esto a tu clase Movimiento:
+        private final Personaje personaje;
+
+        //--------------------------------------------------------
     //  🔹 CONSTRUCTOR DE MOVIMIENTO + EVENTOS RATÓN Y TECLADO
     //--------------------------------------------------------
 
         /** Inicializa el movimiento, captura eventos de teclado y ratón,
          *  y sincroniza la cámara con el escenario y colisiones. */
 
-        public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones) {
+        public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones, Personaje personaje) {
             this.escenario = escenario;
             this.colisiones = colisiones;
+            this.personaje = new Personaje();
             setOpaque(false);
             setFocusable(true);
 
@@ -141,74 +147,145 @@ public class Movimiento extends JPanel implements ActionListener {
     //  🔹 LÓGICA DE MOVIMIENTO Y COLISIONES
     //---------------------------------------------------
 
-        /** Gestiona el movimiento del personaje y el desplazamiento del fondo.
-         *  Verifica colisiones y evita que el mapa se salga de los límites. */
 
+        /**
+         * Método principal que gestiona el movimiento del jugador.
+         * Su tarea es coordinar toda la lógica:
+         * 1. Verificar colisiones antes de moverse.
+         * 2. Calcular el vector de movimiento del jugador.
+         * 3. Aplicar el movimiento calculado al mapa.
+         * 4. Redibujar la pantalla para reflejar los cambios.
+         */
         private void moverJugador() {
-            int newDesplazamientoX = desplazamientoX, newDesplazamientoY = desplazamientoY;
-            int personajeX = SCREEN_WIDTH / 2, personajeY = SCREEN_HEIGHT / 2;
+            // La posición "central" del jugador en la pantalla.
+            int personajeX = SCREEN_WIDTH / 2;
+            int personajeY = SCREEN_HEIGHT / 2;
+
+            // Verificar las colisiones en las cuatro direcciones:
+            boolean[] colisionesDirecciones = verificarColisiones(personajeX, personajeY);
+
+            // Calcular el movimiento basado en las teclas y las colisiones detectadas:
+            double[] movimiento = calcularMovimiento(colisionesDirecciones);
+
+            // Aplicar dicho movimiento al desplazamiento del escenario:
+            aplicarMovimiento(movimiento);
+
+            // Redibujar la pantalla con los nuevos valores.
+            repaint();
+        }
+
+
+        /** Verifica las colisiones en las cuatro direcciones y retorna un array con los resultados. */
+        private boolean[] verificarColisiones(int personajeX, int personajeY) {
             int hitboxSize = 10;
 
-            // 🔹 Verificar colisiones en cada dirección
             boolean colisionArriba = colisiones.hayColision(personajeX, personajeY - hitboxSize - velocidad);
             boolean colisionAbajo = colisiones.hayColision(personajeX, personajeY + hitboxSize + velocidad);
             boolean colisionIzquierda = colisiones.hayColision(personajeX - hitboxSize - velocidad, personajeY);
             boolean colisionDerecha = colisiones.hayColision(personajeX + hitboxSize + velocidad, personajeY);
 
-            // 🔹 Calcular el desplazamiento en X e Y según las teclas presionadas
-            double moveX = 0;
-            double moveY = 0;
+            return new boolean[]{colisionArriba, colisionAbajo, colisionIzquierda, colisionDerecha};
+        }
 
-            if (up && !colisionArriba) moveY -= velocidad;
-            if (down && !colisionAbajo) moveY += velocidad;
-            if (left && !colisionIzquierda) moveX -= velocidad;
-            if (right && !colisionDerecha) moveX += velocidad;
+        /**
+         * Calcula el desplazamiento en los ejes `X` e `Y` basado
+         * en las teclas presionadas y teniendo en cuenta las
+         * colisiones detectadas en las direcciones respectivas.
+         *
+         * Si hay colisiones en cualquier dirección, el personaje
+         * no podrá moverse en esa dirección.
+         *
+         * Además, si el personaje intenta moverse diagonalmente,
+         * este método normaliza el movimiento para que no sea más
+         * rápido al combinar dos direcciones (evita el "boost diagonal").
+         *
+         * @param colisionesDirecciones Un array booleano con colisiones en:
+         *                              - [0] Arriba
+         *                              - [1] Abajo
+         *                              - [2] Izquierda
+         *                              - [3] Derecha
+         * @return Un array `double[2]` donde:
+         *         - [0] es el movimiento horizontal (`X`)
+         *         - [1] es el movimiento vertical (`Y`)
+         */
+        private double[] calcularMovimiento(boolean[] colisionesDirecciones) {
+            double moveX = 0, moveY = 0; // Inicializamos la dirección de movimiento.
 
-            // 🔹 Normalizar el movimiento diagonal
-            double length = Math.sqrt(moveX * moveX + moveY * moveY);
+            // Comprobar si podemos movernos en cada dirección (¡sin colisiones!):
+            if (up && !colisionesDirecciones[0]) moveY -= velocidad; // Movimiento hacia arriba resta al eje Y.
+            if (down && !colisionesDirecciones[1]) moveY += velocidad; // Movimiento hacia abajo suma al eje Y.
+            if (left && !colisionesDirecciones[2]) moveX -= velocidad; // Movimiento hacia la izquierda resta al eje X.
+            if (right && !colisionesDirecciones[3]) moveX += velocidad; // Movimiento hacia la derecha suma al eje X.
+
+            // Si el personaje intenta moverse en diagonal (por ejemplo, W+A), ajustamos el movimiento.
+            double length = Math.sqrt(moveX * moveX + moveY * moveY); // Magnitud del vector de movimiento.
             if (length > 0) {
-                moveX = (moveX / length) * velocidad;  // Normalizar X
-                moveY = (moveY / length) * velocidad;  // Normalizar Y
+                // Normalizamos el movimiento diagonal y lo ajustamos a la velocidad deseada.
+                moveX = (moveX / length) * velocidad;
+                moveY = (moveY / length) * velocidad;
             }
 
-            // 🔹 Aplicar el movimiento normalizado
-            newDesplazamientoX += (int) moveX;
-            newDesplazamientoY += (int) moveY;
+            return new double[]{moveX, moveY}; // Retornamos el desplazamiento calculado.
+        }
 
-            // 🔹 Aplicar límites para que el mapa no se salga de los bordes
+
+        /**
+         * Aplica el movimiento calculado al desplazamiento del mapa, permitiendo que
+         * el personaje "se mueva" en pantalla desplazando el mapa y respetando los
+         * límites del escenario.
+         *
+         * Además, sincroniza la posición del desplazamiento con los sistemas de
+         * colisión y el escenario.
+         *
+         * @param movimiento Un array `double[2]` que contiene:
+         *                   - [0] Movimiento en X
+         *                   - [1] Movimiento en Y
+         */
+        private void aplicarMovimiento(double[] movimiento) {
+            // Actualizar las posiciones del desplazamiento:
+            int newDesplazamientoX = desplazamientoX + (int) movimiento[0];
+            int newDesplazamientoY = desplazamientoY + (int) movimiento[1];
+
+            // Limitar el movimiento dentro del tamaño del mapa:
             newDesplazamientoX = Math.max(0, Math.min(newDesplazamientoX, escenario.getAncho() - SCREEN_WIDTH));
             newDesplazamientoY = Math.max(0, Math.min(newDesplazamientoY, escenario.getAlto() - SCREEN_HEIGHT));
 
-            // 🔹 Actualizar desplazamiento solo si hay cambios
+            // Si el desplazamiento cambia, actualizar el escenario y colisiones:
             if (newDesplazamientoX != desplazamientoX || newDesplazamientoY != desplazamientoY) {
-                desplazamientoX = newDesplazamientoX;
-                desplazamientoY = newDesplazamientoY;
-                escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY);
-                colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
+                desplazamientoX = newDesplazamientoX; // Actualizamos X.
+                desplazamientoY = newDesplazamientoY; // Actualizamos Y.
+                escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY); // Actualizamos el fondo del mapa.
+                colisiones.actualizarOffset(desplazamientoX, desplazamientoY); // Actualizamos las colisiones.
             }
-
-            // 🔹 Redibujar pantalla
-            repaint();
         }
 
-    //---------------------------------------------------
+
+
+        //---------------------------------------------------
     //  🔹 DIBUJADO DEL PERSONAJE
     //---------------------------------------------------
-
-        /** Dibuja al personaje en el centro de la pantalla
-         * con su rotación correspondiente. */
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2d = (Graphics2D) g;
 
-            // 🔹 Configuración de color y rotación
-            g2d.setColor(Color.RED);
+            // Obtener la imagen del personaje
+            Image imagenPersonaje = personaje.getImagen();
+
+            // Dibujar la imagen en el centro de la pantalla con rotación
             g2d.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
             g2d.rotate(anguloRotacion);
-            g2d.fillRect(-10, -10, 20, 20);
+
+            int anchoImagen = imagenPersonaje.getWidth(this);
+            int altoImagen = imagenPersonaje.getHeight(this);
+            if (anchoImagen > 0 && altoImagen > 0) {
+                g2d.drawImage(imagenPersonaje, -anchoImagen / 2, -altoImagen / 2, this);
+            }
+
             g2d.rotate(-anguloRotacion);
             g2d.translate(-SCREEN_WIDTH / 2, -SCREEN_HEIGHT / 2);
         }
+
+
     }

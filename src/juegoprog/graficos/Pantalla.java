@@ -2,6 +2,7 @@ package juegoprog.graficos;
 
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.jugador.Personaje;
 import juegoprog.sistema.MenuPrincipal;
 import juegoprog.controles.Movimiento;
 
@@ -19,6 +20,7 @@ public class Pantalla extends JFrame {
     private final Movimiento movimiento;
     private final EscenarioDistritoSombrio escenario;
     private final ColisionesPanel colisiones;
+
 
     /** Configura la ventana del juego, las pantallas y las capas de la interfaz. */
 
@@ -51,8 +53,11 @@ public class Pantalla extends JFrame {
         colisiones.setBounds(0, 0, 4472, 4816);
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
+        // 🔹 Crear el objeto Personaje para pasarlo a Movimiento
+        Personaje personaje = new Personaje(); // Asegúrate de que Personaje cargue la imagen correctamente
+
         // 🔹 Movimiento (Personaje), pasando referencias de escenario y colisiones
-        movimiento = new Movimiento(escenario, colisiones);
+        movimiento = new Movimiento(escenario, colisiones, personaje);
         movimiento.setBounds(0, 0, 1280, 720);
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
