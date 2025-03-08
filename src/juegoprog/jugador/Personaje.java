@@ -7,8 +7,12 @@ import java.util.Objects;
 
 public class Personaje extends JPanel {
     private Image imagen; // La imagen del personaje
-    private final int ancho = 70;
-    private final int alto = 70; // Tamaño del personaje
+    private final int ancho = 60;
+    private final int alto = 60; // Tamaño del personaje
+
+    // Posición actual del personaje
+    private int x = 50; // Coordenada X inicial
+    private int y = 50; // Coordenada Y inicial
 
     // Constructor
     public Personaje() {
@@ -35,10 +39,6 @@ public class Personaje extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // Posición del personaje
-        int x = 50;
-        int y = 50;
-
         // Ahora dibuja la imagen
         if (imagen != null) {
             g.drawImage(imagen, x, y, ancho, alto, this);
@@ -49,7 +49,23 @@ public class Personaje extends JPanel {
 
         Toolkit.getDefaultToolkit().sync(); // Para animación suave
     }
-
+    // Métodos para acceder y modificar las coordenadas del personaje
+    public int getX() {
+        return x;
     }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setPosicion(int x, int y) {
+        this.x = x;
+        this.y = y;
+        repaint(); // Redibujar el personaje en su nueva posición
+    }
+
+
+
+}
 
 

@@ -90,7 +90,12 @@ import java.net.URL;
     //  🔹 MÉTODOS GETTERS
     //---------------------------------------------------
 
-    /** Retorna el ancho del escenario. */
+
+        public BufferedImage getFondo() {
+            return imagenFondo;
+        }
+
+        /** Retorna el ancho del escenario. */
     public int getAncho() {
         return ANCHO;
     }
@@ -100,3 +105,4 @@ import java.net.URL;
         return ALTO;
     }
 }
+
