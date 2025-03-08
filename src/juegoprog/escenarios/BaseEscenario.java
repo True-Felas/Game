@@ -13,18 +13,9 @@ public abstract class BaseEscenario extends JPanel { // 🔹 Ahora hereda de JPa
         setLayout(null); // 🔹 Permite posicionar elementos libremente en el panel
     }
 
-    public void cargar() {
-        System.out.println("Cargando escenario...");
-    }
-
-    public void actualizar() {
-        System.out.println("Actualizando escenario...");
-    }
-
     @Override
     protected void paintComponent(Graphics g) {  // ✅ Método correcto para dibujar en JPanel
         super.paintComponent(g);
-        ;
     }
 
     public int getAncho() {
@@ -34,6 +25,4 @@ public abstract class BaseEscenario extends JPanel { // 🔹 Ahora hereda de JPa
     public int getAlto() {
         return alto;
     }
-
-
 }

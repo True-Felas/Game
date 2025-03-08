@@ -51,7 +51,7 @@ public class Movimiento extends JPanel implements ActionListener {
         public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones, Personaje personaje) {
             this.escenario = escenario;
             this.colisiones = colisiones;
-            this.personaje = new Personaje();
+            this.personaje = personaje;
             setOpaque(false);
             setFocusable(true);
 
@@ -169,6 +169,13 @@ public class Movimiento extends JPanel implements ActionListener {
 
             // Aplicar dicho movimiento al desplazamiento del escenario:
             aplicarMovimiento(movimiento);
+
+            // Actualizar las coordenadas reales del personaje
+            int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
+            int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
+
+            // Sincronizar las coordenadas reales con el objeto `Personaje`
+            personaje.setPosicion(personajeRealX, personajeRealY);
 
             // Redibujar la pantalla con los nuevos valores.
             repaint();
