@@ -34,21 +34,6 @@ public class Personaje extends JPanel {
         }
     }
 
-    // Dibuja personaje
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        // Ahora dibuja la imagen
-        if (imagen != null) {
-            g.drawImage(imagen, x, y, ancho, alto, this);
-        } else {
-            g.setColor(Color.RED);
-            g.fillRect(x, y, ancho, alto); // Si no se carga la imagen, dibuja un cuadrado
-        }
-
-        Toolkit.getDefaultToolkit().sync(); // Para animación suave
-    }
     // Métodos para acceder y modificar las coordenadas del personaje
     public int getX() {
         return x;
@@ -61,7 +46,6 @@ public class Personaje extends JPanel {
     public void setPosicion(int x, int y) {
         this.x = x;
         this.y = y;
-        repaint(); // Redibujar el personaje en su nueva posición
     }
 
 

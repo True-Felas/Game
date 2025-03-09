@@ -41,4 +41,3 @@ public class Minimapa extends JPanel {
         g.fillOval(personajeX - 3, personajeY - 3, 6, 6);
     }
 }
-

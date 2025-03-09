@@ -83,7 +83,6 @@ import java.net.URL;
     public void actualizarDesplazamiento(int x, int y) {
         this.desplazamientoX = x;
         this.desplazamientoY = y;
-        repaint();
     }
 
     //---------------------------------------------------

@@ -9,10 +9,6 @@ import juegoprog.controles.Movimiento;
 import javax.swing.*;
 import java.awt.*;
 
-    /** Gestiona la ventana principal del juego, utilizando
-     *  CardLayout para cambiar entre pantallas como vimos en los ejemplos.
-     *  Implementa capas (`JLayeredPane`) para manejar la superposición de elementos. */
-
 public class Pantalla extends JFrame {
     private final CardLayout cardLayout;
     private final JPanel contenedorPrincipal;
@@ -22,12 +18,10 @@ public class Pantalla extends JFrame {
     private final ColisionesPanel colisiones;
     private final Minimapa minimapa;
 
-
     private int frameCount = 0; // Contador de frames
     private long lastTime = System.nanoTime(); // Última medición de tiempo
 
     /** Configura la ventana del juego, las pantallas y las capas de la interfaz. */
-
     public Pantalla() {
         setTitle("Juego - Pantalla Principal");
         setSize(1280, 720);
@@ -65,25 +59,21 @@ public class Pantalla extends JFrame {
         movimiento.setBounds(0, 0, 1280, 720);
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
-        // Minimapa
+        // 🔹 Minimapa
         minimapa = new Minimapa(escenario.getFondo(), personaje, 4472, 4816); // Dimensiones del mapa completo
         minimapa.setBounds(20, 20, 200, 200); // Coloca el minimapa en una esquina.
         capaJuego.add(minimapa, JLayeredPane.MODAL_LAYER); // Capas superiores.
 
-
         // 🔹 Agregar la pantalla de juego al contenedor de pantallas
         contenedorPrincipal.add(capaJuego, "JUEGO");
 
-        // Inicia el contador y el bucle del juego
+        // 🔹 Inicia el bucle del juego
         iniciarBucle();
-
 
         setVisible(true);
     }
 
-    /** Cambia entre pantallas (Menú o Juego) dentro del CardLayout.
-     *  Si se cambia a "JUEGO", asegura que `Movimiento` reciba el foco. */
-
+    /** Cambia entre pantallas (Menú o Juego) dentro del CardLayout. */
     public void cambiarPantalla(String pantalla) {
         cardLayout.show(contenedorPrincipal, pantalla);
 
@@ -92,50 +82,41 @@ public class Pantalla extends JFrame {
         }
     }
 
-        /**
-         * Inicia un bucle para gestionar los FPS y renderizar continuamente.
-         */
-        private void iniciarBucle() {
-            new Thread(() -> {
-                while (true) {
-                    // Actualiza el estado del juego
-                    actualizar();
-                    try {
-                        Thread.sleep(16); // Aproximadamente 60 FPS (1000 ms / 60 = 16.66 ms por frame)
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+    /** Inicia un bucle para gestionar los FPS y renderizar continuamente. */
+    private void iniciarBucle() {
+        new Thread(() -> {
+            while (true) {
+                // Actualiza el estado del juego
+                actualizar();
+                try {
+                    Thread.sleep(16); // Aproximadamente 60 FPS (1000 ms / 60 = 16.66 ms por frame)
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            }).start();
-        }
-
-        /**
-         * Actualiza cualquier lógica del juego que necesite cambiar entre frames.
-         */
-        private void actualizar() {
-            // Actualiza constantemente el minimapa
-            minimapa.repaint();
-
-            // Recalcula los FPS cada segundo
-            calcularYActualizarFPS();
-        }
-
-        /**
-         * Calcula los FPS y actualiza el título de la ventana.
-         */
-        private void calcularYActualizarFPS() {
-            frameCount++;
-            long currentTime = System.nanoTime();
-
-            // Si ha pasado más de 1 segundo, actualiza el título
-            if (currentTime - lastTime >= 1_000_000_000L) {
-                double fps = frameCount / ((currentTime - lastTime) / 1e9); // Cuántos frames en 1 segundo
-                frameCount = 0; // Reiniciar el contador
-                lastTime = currentTime; // Reiniciar el tiempo
-
-                // Actualizar el título con los FPS
-                SwingUtilities.invokeLater(() -> setTitle("Juego - FPS: " + String.format("%.2f", fps)));
             }
-        }
-
+        }).start();
     }
+
+    /** Actualiza cualquier lógica del juego que necesite cambiar entre frames. */
+    private void actualizar() {
+        movimiento.moverJugador(); // Mueve al personaje (incluye lógica de colisiones)
+        calcularYActualizarFPS(); // Calcula y actualiza FPS
+        repaint(); // Redibuja todas las capas principales
+    }
+
+    /** Calcula los FPS y actualiza el título de la ventana. */
+    private void calcularYActualizarFPS() {
+        frameCount++;
+        long currentTime = System.nanoTime();
+
+        // Si ha pasado más de 1 segundo, actualiza el título
+        if (currentTime - lastTime >= 1_000_000_000L) {
+            double fps = frameCount / ((currentTime - lastTime) / 1e9); // Cuántos frames en 1 segundo
+            frameCount = 0; // Reiniciar el contador
+            lastTime = currentTime; // Reiniciar el tiempo
+
+            // Actualizar el título con los FPS
+            SwingUtilities.invokeLater(() -> setTitle("Juego - FPS: " + String.format("%.2f", fps)));
+        }
+    }
+}
