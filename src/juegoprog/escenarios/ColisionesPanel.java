@@ -86,11 +86,6 @@ public class ColisionesPanel extends JPanel {
         // Obtener la transparencia del píxel
         int alpha = (colisionesImg.getRGB(colisionX, colisionY) >> 24) & 0xff;
 
-        // Solo imprimir si hay colisión
-        if (alpha > 0) {
-            System.out.println("🎨 COLISIÓN en (" + colisionX + ", " + colisionY + ") | Alfa: " + alpha);
-        }
-
         return alpha > 0;
     }
 
@@ -114,12 +109,11 @@ public class ColisionesPanel extends JPanel {
     //---------------------------------------------------
 
     /** Actualiza el desplazamiento del mapa de colisiones para que coincida
-     *  con el escenario. Luego repinta el panel para reflejar estos cambios. */
+     *  con el escenario. */
 
     public void actualizarOffset(int offsetX, int offsetY) {
         this.desplazamientoX = offsetX;
         this.desplazamientoY = offsetY;
-        repaint();
     }
 
 }
