@@ -17,7 +17,6 @@ public class Main {
         /* 🔹 Si se desactiva el escalado se le da un *1.5 a la pantalla para que aumente un poco.
         pantalla.setSize((int)(pantalla.getWidth() * 1.5), (int)(pantalla.getHeight() * 1.5));
         pantalla.setPreferredSize(new Dimension(pantalla.getWidth(), pantalla.getHeight()));*/
-
     }
 }
 

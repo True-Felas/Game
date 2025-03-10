@@ -1,5 +1,6 @@
 package juegoprog.controles;
 
+import juegoprog.elementos.GestorBalas;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.jugador.Personaje;
@@ -10,7 +11,7 @@ import java.awt.event.*;
 
 /**
  * Gestiona el movimiento del personaje y la cámara.
- * Maneja eventos de teclado y ratón para controlar desplazamiento y rotación.
+ * Maneja eventos de teclado y ratón para controlar desplazamiento, rotación y disparos de balas.
  * Basado en los apuntes de Soraya "Eventos y Escuchadores".
  */
 public class Movimiento extends JPanel implements ActionListener {
@@ -36,13 +37,16 @@ public class Movimiento extends JPanel implements ActionListener {
     private final ColisionesPanel colisiones; // 🔹 Referencia al panel de colisiones
     private final Personaje personaje; // 🔹 Personaje que se moverá en pantalla
 
+    /** GESTIÓN DE BALAS */
+    private final GestorBalas gestorBalas = new GestorBalas(); // 🔹 Clase auxiliar para manejo de balas
+
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
     //---------------------------------------------------
 
     /**
      * Inicializa el movimiento, captura eventos de teclado y ratón,
-     * y sincroniza la cámara con el escenario y colisiones.
+     * y sincroniza la cámara con el escenario, colisiones y disparo de balas.
      */
     public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones, Personaje personaje) {
         this.escenario = escenario;
@@ -60,7 +64,6 @@ public class Movimiento extends JPanel implements ActionListener {
         colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
 
         configurarEventos();
-
     }
 
     /** Configura los eventos de teclado y ratón. */
@@ -86,10 +89,20 @@ public class Movimiento extends JPanel implements ActionListener {
                 calcularAnguloRotacion();
             }
         });
+
+        // Captura de clics del ratón
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e)) {
+                    dispararBala(); // 🔹 Dispara una bala con el clic izquierdo
+                }
+            }
+        });
     }
 
     //---------------------------------------------------
-    //  🔹 LÓGICA DE MOVIMIENTO
+    //  🔹 LÓGICA DE MOVIMIENTO Y DISPARO
     //---------------------------------------------------
 
     /** Calcula el ángulo de rotación del personaje basado en la posición del ratón. */
@@ -123,18 +136,37 @@ public class Movimiento extends JPanel implements ActionListener {
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        // Este método queda vacío si el control está gestionado desde Pantalla
+    /**
+     * Dispara una nueva bala hacia la posición del ratón.
+     * La bala se inicia en el centro de la pantalla y se mueve hacia
+     * la posición del ratón relativa a la ventana.
+     */
+    private void dispararBala() {
+        // Coordenadas iniciales: el centro de la pantalla
+        double xInicial = desplazamientoX + ((double) SCREEN_WIDTH / 2);
+        double yInicial = desplazamientoY + ((double) SCREEN_HEIGHT / 2);
+
+        // Coordenadas objetiv: posición actual del ratón (relativa al puntero)
+        double objetivoX = posicionRaton.x;
+        double objetivoY = posicionRaton.y;
+
+        // Dispara una bala usando el gestor
+        gestorBalas.disparar(
+                xInicial, // Posición inicial en X
+                yInicial, // Posición inicial en Y
+                objetivoX, // Posición del ratón real
+                objetivoY// Posición del ratón real
+        );
     }
+
+
 
     //---------------------------------------------------
     //  🔹 LÓGICA PRINCIPAL DE MOVIMIENTO
     //---------------------------------------------------
 
     /**
-     * Método que gestiona la lógica de movimiento del jugador.
-     * Sincroniza el desplazamiento del mapa con las colisiones.
+     * Sincroniza el desplazamiento del mapa con las colisiones y gestiona las balas.
      */
     public void moverJugador() {
         // La posición "central" del jugador en la pantalla.
@@ -156,6 +188,9 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
+
+        // 🔹 Actualizar las balas activas
+        gestorBalas.actualizar();
     }
 
     /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */
@@ -207,7 +242,7 @@ public class Movimiento extends JPanel implements ActionListener {
     }
 
     //---------------------------------------------------
-    //  🔹 DIBUJADO DEL PERSONAJE
+    //  🔹 DIBUJADO DEL PERSONAJE Y LAS BALAS
     //---------------------------------------------------
 
     @Override
@@ -230,5 +265,14 @@ public class Movimiento extends JPanel implements ActionListener {
 
         g2d.rotate(-anguloRotacion);
         g2d.translate(-SCREEN_WIDTH / 2, -SCREEN_HEIGHT / 2);
+
+        // 🔹 Dibujar las balas
+        gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
+
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
     }
 }
