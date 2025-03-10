@@ -47,9 +47,6 @@ public class Personaje extends JPanel {
         this.x = x;
         this.y = y;
     }
-
-
-
 }
 
 
