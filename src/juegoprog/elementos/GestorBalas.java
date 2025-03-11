@@ -25,21 +25,26 @@ public class GestorBalas {
      * @param objetivoY  Coordenada Y hacia donde apunta la bala.
      */
     public void disparar(double startX, double startY, double objetivoX, double objetivoY) {
-        balas.add(new Bala(startX, startY, objetivoX, objetivoY));
-
+        synchronized (balas) {
+            balas.add(new Bala(startX, startY, objetivoX, objetivoY));
+        }
     }
 
     /**
      * Actualiza la posición de todas las balas activas en el juego.
      * Elimina las balas que ya no están activas (colisiones o fuera del mapa).
      */
-    public void actualizar() {
-        Iterator<Bala> iterador = balas.iterator();
-        while (iterador.hasNext()) {
-            Bala bala = iterador.next();
-            bala.actualizar();
-            if (!bala.isActiva()) {
-                iterador.remove(); // Elimina la bala si ya no está activa
+    public void actualizar(ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
+        synchronized (balas) {
+            Iterator<Bala> iterador = balas.iterator();
+            while (iterador.hasNext()) {
+                Bala bala = iterador.next();
+                bala.actualizar(colisiones, desplazamientoX, desplazamientoY);
+
+                // Si la bala no sigue activa, eliminarla
+                if (!bala.isActiva()) {
+                    iterador.remove();
+                }
             }
         }
     }
@@ -50,9 +55,12 @@ public class GestorBalas {
      * @param g Contexto gráfico del juego.
      */
     public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
-        for (Bala bala : balas) {
-            bala.dibujar(g, desplazamientoX, desplazamientoY);
+        synchronized (balas) {
+            for (Bala bala : balas) {
+                bala.dibujar(g, desplazamientoX, desplazamientoY);
+            }
         }
+
     }
 
 }
