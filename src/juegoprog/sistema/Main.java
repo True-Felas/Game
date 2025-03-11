@@ -9,7 +9,7 @@ public class Main {
 
         /*🔹 Desactiva el escalado de Windows en Java
         (Lo dejo como comentario y ya probáis a usarlo)*/
-        // System.setProperty("sun.java2d.uiScale", "1.0");
+         System.setProperty("sun.java2d.uiScale", "1.0");
 
         // 🔹 Iniciar la pantalla del juego
         Pantalla pantalla = new Pantalla();
