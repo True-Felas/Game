@@ -143,21 +143,18 @@ public class Movimiento extends JPanel implements ActionListener {
      */
     private void dispararBala() {
         // Coordenadas iniciales: el centro de la pantalla
-        double xInicial = desplazamientoX + ((double) SCREEN_WIDTH / 2);
-        double yInicial = desplazamientoY + ((double) SCREEN_HEIGHT / 2);
+        double xInicial = personaje.getX();
+        double yInicial = personaje.getY();
 
-        // Coordenadas objetiv: posición actual del ratón (relativa al puntero)
+        // Coordenadas objetiv: posición actual del ratón (relativa al desplazamiento del mapa)
         double objetivoX = posicionRaton.x;
         double objetivoY = posicionRaton.y;
 
-        // Dispara una bala usando el gestor
-        gestorBalas.disparar(
-                xInicial, // Posición inicial en X
-                yInicial, // Posición inicial en Y
-                objetivoX, // Posición del ratón real
-                objetivoY// Posición del ratón real
-        );
+
+        // Llamar al gestor de balas para disparar
+        gestorBalas.disparar(xInicial, yInicial, objetivoX, objetivoY);
     }
+
 
 
 
@@ -170,8 +167,8 @@ public class Movimiento extends JPanel implements ActionListener {
      */
     public void moverJugador() {
         // La posición "central" del jugador en la pantalla.
-        int personajeX = SCREEN_WIDTH / 2;
-        int personajeY = SCREEN_HEIGHT / 2;
+        int personajeX = desplazamientoX + SCREEN_WIDTH / 2;
+        int personajeY = desplazamientoY + SCREEN_HEIGHT / 2;
 
         // Verificar colisiones en las cuatro direcciones
         boolean[] colisionesDirecciones = verificarColisiones(personajeX, personajeY);
@@ -190,20 +187,26 @@ public class Movimiento extends JPanel implements ActionListener {
         personaje.setPosicion(personajeRealX, personajeRealY);
 
         // 🔹 Actualizar las balas activas
-        gestorBalas.actualizar();
+        gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
     }
 
     /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */
     private boolean[] verificarColisiones(int personajeX, int personajeY) {
         int hitbox = 10;
 
-        boolean colisionArriba = colisiones.hayColision(personajeX, personajeY - hitbox - velocidad);
-        boolean colisionAbajo = colisiones.hayColision(personajeX, personajeY + hitbox + velocidad);
-        boolean colisionIzquierda = colisiones.hayColision(personajeX - hitbox - velocidad, personajeY);
-        boolean colisionDerecha = colisiones.hayColision(personajeX + hitbox + velocidad, personajeY);
+        // Ajustamos las coordenadas globales basadas en el desplazamiento del mapa
+        int globalX = personaje.getX() - desplazamientoX;
+        int globalY = personaje.getY() - desplazamientoY;
+
+        // Verificamos las colisiones en las cuatro direcciones usando estas coordenadas globales
+        boolean colisionArriba = colisiones.hayColision(globalX, globalY - hitbox - velocidad);
+        boolean colisionAbajo = colisiones.hayColision(globalX, globalY + hitbox + velocidad);
+        boolean colisionIzquierda = colisiones.hayColision(globalX - hitbox - velocidad, globalY);
+        boolean colisionDerecha = colisiones.hayColision(globalX + hitbox + velocidad, globalY);
 
         return new boolean[]{colisionArriba, colisionAbajo, colisionIzquierda, colisionDerecha};
     }
+
 
     /** Calcula el movimiento del personaje basado en las teclas presionadas y las colisiones detectadas. */
     private double[] calcularMovimiento(boolean[] colisionesDirecciones) {

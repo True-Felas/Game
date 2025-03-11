@@ -1,5 +1,4 @@
 package juegoprog.elementos;
-
 import juegoprog.escenarios.ColisionesPanel;
 
 import java.awt.*;
@@ -10,9 +9,9 @@ import java.awt.*;
  */
 public class Bala {
     private double x, y;          // Posición actual de la bala en el mundo
-    private double dx, dy;        // Dirección de movimiento (vector normalizado)
+    private final double dx;
+    private final double dy;        // Dirección de movimiento (vector normalizado)
     private final int velocidad;  // Velocidad de desplazamiento de la bala
-    private final int tamano = 5; // Tamaño de la bala en píxeles
     private boolean activa = true; // Indica si la bala sigue activa
 
     /**
@@ -38,13 +37,27 @@ public class Bala {
     /**
      * Actualiza la posición de la bala y verifica colisiones.
      */
-    public void actualizar() {
-        if (!activa) return; // Si ya está inactiva, no hace nada
+    public void actualizar(ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
+        if (!activa) return;
 
-        x += dx * velocidad;
-        y += dy * velocidad;
+        // Dividimos el movimiento en pasos pequeños (interpolación)
+        int pasos = (int) Math.ceil(velocidad / 5.0); // Cuantos más pasos, más preciso
+        double deltaX = dx * velocidad / pasos;
+        double deltaY = dy * velocidad / pasos;
 
+        for (int i = 0; i < pasos; i++) {
+            x += deltaX;
+            y += deltaY;
+
+            // Verificar colisión
+            if (colisiones.hayColision((int) x - desplazamientoX, (int) y - desplazamientoY)) {
+                activa = false; // Desactivar la bala si colisiona
+                break;
+            }
+
+        }
     }
+
 
     /**
      * Verifica si la bala sigue activa.
@@ -69,6 +82,9 @@ public class Bala {
 
         // Dibuja la bala ajustada al sistema de coordenadas visible
         g.setColor(Color.YELLOW);
+        // Tamaño de la bala en píxeles
+        int tamano = 5;
+
         g.fillOval(xVisible - tamano / 2, yVisible - tamano / 2, tamano, tamano);
     }
 
