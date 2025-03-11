@@ -16,7 +16,7 @@ public class Personaje extends JPanel {
 
     // Constructor
     public Personaje() {
-        cargarImagen("/personaje/prueba.png"); // Ruta de la imagen en resources
+        cargarImagen("/personaje/personajep.png"); // Ruta de la imagen en resources
     }
 
     public Image getImagen() {
