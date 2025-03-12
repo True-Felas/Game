@@ -2,8 +2,6 @@ package juegoprog.sistema;
 
 import juegoprog.graficos.Pantalla;
 
-import java.awt.*;
-
 public class Main {
     public static void main(String[] args) {
 

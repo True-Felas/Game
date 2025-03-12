@@ -1,4 +1,5 @@
 package juegoprog.elementos;
+
 import juegoprog.escenarios.ColisionesPanel;
 
 import java.awt.*;
@@ -41,7 +42,7 @@ public class Bala {
         if (!activa) return;
 
         // Dividimos el movimiento en pasos pequeños (interpolación)
-        int pasos = (int) Math.ceil(velocidad / 5.0); // Cuantos más pasos, más preciso
+        int pasos = (int) Math.ceil(velocidad / 5.0);
         double deltaX = dx * velocidad / pasos;
         double deltaY = dy * velocidad / pasos;
 
@@ -54,10 +55,8 @@ public class Bala {
                 activa = false; // Desactivar la bala si colisiona
                 break;
             }
-
         }
     }
-
 
     /**
      * Verifica si la bala sigue activa.
@@ -74,7 +73,7 @@ public class Bala {
      * @param g Contexto gráfico donde se dibuja la bala.
      */
     public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
-        if (!activa) return; // Si no está activa, no se dibuja
+        if (!activa) return;
 
         // Ajusta las coordenadas de la bala basándote en el desplazamiento del mapa
         int xVisible = (int) x - desplazamientoX;
@@ -82,10 +81,19 @@ public class Bala {
 
         // Dibuja la bala ajustada al sistema de coordenadas visible
         g.setColor(Color.YELLOW);
-        // Tamaño de la bala en píxeles
         int tamano = 5;
-
         g.fillOval(xVisible - tamano / 2, yVisible - tamano / 2, tamano, tamano);
     }
 
+    public void desactivar() {
+        this.activa = false;
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
 }
