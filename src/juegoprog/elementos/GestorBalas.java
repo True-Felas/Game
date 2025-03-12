@@ -41,7 +41,6 @@ public class GestorBalas {
                 Bala bala = iterador.next();
                 bala.actualizar(colisiones, desplazamientoX, desplazamientoY);
 
-                // Si la bala no sigue activa, eliminarla
                 if (!bala.isActiva()) {
                     iterador.remove();
                 }
@@ -60,8 +59,14 @@ public class GestorBalas {
                 bala.dibujar(g, desplazamientoX, desplazamientoY);
             }
         }
-
     }
 
+    /**
+     * Retorna una referencia a la lista de balas activas.
+     *
+     * @return Lista de balas activas.
+     */
+    public List<Bala> getBalas() {
+        return balas;
+    }
 }
-
