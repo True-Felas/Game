@@ -1,6 +1,7 @@
 package juegoprog.controles;
 
 import juegoprog.elementos.GestorBalas;
+import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.jugador.Personaje;
@@ -39,6 +40,9 @@ public class Movimiento extends JPanel implements ActionListener {
 
     /** GESTIÓN DE BALAS */
     private final GestorBalas gestorBalas = new GestorBalas(); // 🔹 Clase auxiliar para manejo de balas
+
+    /** GESTIÓN DE ENEMIGOS */
+    private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
 
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
@@ -153,6 +157,7 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Llamar al gestor de balas para disparar
         gestorBalas.disparar(xInicial, yInicial, objetivoX, objetivoY);
+        System.out.println(xInicial +", "+ yInicial);
     }
 
 
@@ -185,6 +190,25 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
+
+        // 🔹 Actualizar enemigos: movimiento hacia el personaje y colisiones con balas
+        gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
+        gestorEnemigos.verificarColisiones(gestorBalas);
+
+        // 🔹 Añadir lógica de oleadas de enemigos
+        if (gestorEnemigos.enemigosEliminados()) {
+            // Determinar las dimensiones del escenario
+            int anchoEscenario = escenario.getAncho(); // Métodos para obtener dimensiones del escenario
+            int altoEscenario = escenario.getAlto();
+
+            // Posición del jugador
+            double posJugadorX = personaje.getX();
+            double posJugadorY = personaje.getY();
+
+            // Generar nueva oleada
+            gestorEnemigos.generarOleada(anchoEscenario, altoEscenario);
+        }
+
 
         // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
@@ -271,6 +295,10 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // 🔹 Dibujar las balas
         gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
+
+        // 🔹 Dibujar enemigos
+        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY);
+
 
     }
 

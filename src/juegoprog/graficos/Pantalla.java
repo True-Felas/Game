@@ -1,5 +1,6 @@
 package juegoprog.graficos;
 
+import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.jugador.Personaje;
@@ -26,6 +27,10 @@ public class Pantalla extends JFrame {
     private final EscenarioDistritoSombrio escenario;
     private final ColisionesPanel colisiones;
     private final Minimapa minimapa;
+
+    // 🔹 Nuevos atributos (modificación para enemigos)
+    private Personaje personaje;  // Personaje principal
+    private final GestorEnemigos gestorEnemigos; // Gestor central de enemigos
 
     private int frameCount = 0; // Contador de frames
     private long lastTime = System.nanoTime(); // Última medición de tiempo
@@ -68,15 +73,18 @@ public class Pantalla extends JFrame {
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
         // 🔹 Crear el objeto Personaje para pasarlo al controlador Movimiento
-        Personaje personaje = new Personaje();
+        personaje = new Personaje();
 
-        // 🔹 Configuración del Control de Movimiento (Personaje y Balas)
-        movimiento = new Movimiento(escenario, colisiones, personaje);
+        // 🔹 Configuración del Control de Movimiento (Personaje, Enemigos y Balas)
+        movimiento = new Movimiento(escenario, colisiones, personaje); // 🔹 Modificado para incluir enemigos
         movimiento.setBounds(0, 0, 1280, 720); // Tamaño de la "vista" de la pantalla
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
+        // 🔹 Crear el gestor de enemigos
+        gestorEnemigos = new GestorEnemigos();
+
         // 🔹 Minimapa para mostrar la posición del jugador y el mapa entero
-        minimapa = new Minimapa(personaje, 4472, 4816); // Dimensiones del mapa completo
+        minimapa = new Minimapa(personaje, gestorEnemigos, 4472, 4816);
         minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236); // Coloca el minimapa en una esquina.
         capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Capas superiores.
 
@@ -143,13 +151,17 @@ public class Pantalla extends JFrame {
         }).start();
     }
 
+    //---------------------------------------------------
+    // 🔹 ACTUALIZACIÓN DE LÓGICA EN EL BUCLE
+    //---------------------------------------------------
+
     /**
      * Actualiza cualquier lógica del juego que necesite cambiar entre frames.
      */
     private void actualizar() {
-        // Actualiza el movimiento del personaje y lógica de las balas
+        // 🔹 Actualiza el movimiento del jugador y lógica de las balas y enemigos
         movimiento.moverJugador();
-        // Calcula y actualiza los FPS en el título de la ventana
+        // 🔹 Calcula y actualiza los FPS en el título de la ventana
         calcularYActualizarFPS();
     }
 
