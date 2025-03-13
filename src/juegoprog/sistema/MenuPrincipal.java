@@ -20,7 +20,7 @@ public class MenuPrincipal extends JPanel {
         this.ventana = ventana;
 
         // Cargar la imagen de fondo desde resources
-        fondo = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Fondo2_4.png"))).getImage();
+        fondo = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Fondo_Menu.png"))).getImage();
 
         setLayout(null); // Usamos diseño absoluto para posicionar los botones manualmente
 
@@ -28,7 +28,7 @@ public class MenuPrincipal extends JPanel {
         gestorMusica.reproducirMusica("/resources/audio/Intro_NoirCity_Find Me Again.wav"); // Música del menú
 
         // 🔹 Crear y animar el título
-        titulo = new JLabel("NOIR CITY GAME", SwingConstants.CENTER);
+        titulo = new JLabel("NOIR CITY", SwingConstants.CENTER);
         titulo.setFont(new Font("SansSerif", Font.BOLD, 50));
         titulo.setForeground(new Color(250, 240, 230));
         titulo.setBounds(300, 20, 700, 80);

@@ -8,14 +8,14 @@ import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.jugador.Personaje;
 import juegoprog.sistema.MenuPrincipal;
 import juegoprog.controles.Movimiento;
+import juegoprog.elementos.Dial;
+
 
 import javax.swing.*;
 import java.awt.*;
 
-/**
- * Clase principal para gestionar la pantalla principal y las distintas vistas (Menú y Juego).
- * También implementa el bucle principal para la lógica y el renderizado del juego.
- */
+/** Clase principal para gestionar la pantalla principal y las distintas vistas (Menú y Juego).
+ * También implementa el bucle principal para la lógica y el renderizado del juego. */
 public class Pantalla extends JFrame {
 
     //---------------------------------------------------
@@ -44,9 +44,9 @@ public class Pantalla extends JFrame {
     // 🔹 CONSTRUCTOR Y CONFIGURACIÓN INICIAL
     //---------------------------------------------------
 
-    /**
-     * Configura la ventana del juego, las pantallas y las capas de la interfaz.
-     */
+    /** Configura la ventana del juego, las pantallas
+     * y las capas de la interfaz. */
+
     public Pantalla() {
         // Configuración de ventana principal
         setTitle("Juego - Pantalla Principal");
@@ -81,9 +81,10 @@ public class Pantalla extends JFrame {
         personaje = new Personaje();
 
         // 🔹 Configuración del Control de Movimiento (Personaje, Enemigos y Balas)
-        movimiento = new Movimiento(escenario, colisiones, personaje); // 🔹 Modificado para incluir enemigos
+        movimiento = new Movimiento(this, escenario, colisiones, personaje); // 🔹 Se agrega 'this' para pasar la referencia de Pantalla
         movimiento.setBounds(0, 0, 1280, 720); // Tamaño de la "vista" de la pantalla
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
+
 
         // 🔹 Crear el gestor de enemigos
         gestorEnemigos = new GestorEnemigos();
@@ -95,6 +96,9 @@ public class Pantalla extends JFrame {
 
         // 🔹 Agregar la pantalla de juego al contenedor de pantallas
         contenedorPrincipal.add(capaJuego, "JUEGO");
+
+        // 🔹 Registrar el minijuego de la caja fuerte en el CardLayout
+        contenedorPrincipal.add(new juegoprog.elementos.Dial(this), "MINIJUEGO_CAJA_FUERTE");
 
         gestorMusica = new GestorMusica();
 
@@ -111,10 +115,8 @@ public class Pantalla extends JFrame {
     // 🔹 CAMBIO ENTRE PANTALLAS
     //---------------------------------------------------
 
-    /**
-     * Cambia entre pantallas (Menú o Juego) dentro del CardLayout.
-     * @param pantalla Nombre de la pantalla ("MENU", "CINEMATICA" o "JUEGO").
-     */
+    /** Cambia entre pantallas (Menú o Juego) dentro del CardLayout.
+     *  ("MENU", "CINEMATICA" o "JUEGO"). */
 
     public void cambiarPantalla(String pantalla) {
         if (pantalla.equals("CINEMATICA")) {
@@ -133,9 +135,8 @@ public class Pantalla extends JFrame {
     // 🔹 BUCLE PRINCIPAL
     //---------------------------------------------------
 
-    /**
-     * Inicia el bucle principal para la lógica y renderización del juego.
-     */
+    /** Inicia el bucle principal para la lógica y renderización del juego. */
+
     private void iniciarBucle() {
         new Thread(() -> {
             final int fps = 60; // Frames por segundo deseados
@@ -163,9 +164,8 @@ public class Pantalla extends JFrame {
     // 🔹 ACTUALIZACIÓN DE LÓGICA EN EL BUCLE
     //---------------------------------------------------
 
-    /**
-     * Actualiza cualquier lógica del juego que necesite cambiar entre frames.
-     */
+    /** Actualiza cualquier lógica del juego que necesite cambiar entre frames. */
+
     private void actualizar() {
         movimiento.moverJugador();
         calcularYActualizarFPS();
@@ -195,10 +195,6 @@ public class Pantalla extends JFrame {
     // 🔹 MÉTODOS GETTERS
     //---------------------------------------------------
 
-    /**
-     * Devuelve la instancia de movimiento para asegurar el enfoque después de la cinemática.
-     * @return movimiento
-     */
     public Movimiento getMovimiento() {
         return movimiento;
     }

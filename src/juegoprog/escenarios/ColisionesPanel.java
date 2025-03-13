@@ -50,7 +50,7 @@ public class ColisionesPanel extends JPanel {
 
     private void cargarImagenCollision() {
         try {
-            URL url = getClass().getResource("/escenarios/colision_distrito_sombrio.png");
+            URL url = getClass().getResource("/escenarios/colision_distrito_sombrio2.png");
             if (url == null) {
                 System.err.println("❌ Imagen de colisión no encontrada.");
                 return;
