@@ -1,5 +1,7 @@
 package juegoprog.graficos;
 
+import juegoprog.audio.GestorMusica;
+import juegoprog.cinematica.Cinematica;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
@@ -34,6 +36,9 @@ public class Pantalla extends JFrame {
 
     private int frameCount = 0; // Contador de frames
     private long lastTime = System.nanoTime(); // Última medición de tiempo
+
+    private final GestorMusica gestorMusica;
+
 
     //---------------------------------------------------
     // 🔹 CONSTRUCTOR Y CONFIGURACIÓN INICIAL
@@ -91,7 +96,11 @@ public class Pantalla extends JFrame {
         // 🔹 Agregar la pantalla de juego al contenedor de pantallas
         contenedorPrincipal.add(capaJuego, "JUEGO");
 
-        // 🔹 Inicia el bucle del juego con un hilo optimizado
+        gestorMusica = new GestorMusica();
+
+
+        // 🔹 La cinemática solo se agrega cuando se llame a cambiarPantalla("CINEMATICA")
+
         iniciarBucle();
 
         // Hacer visible la ventana principal
@@ -104,13 +113,18 @@ public class Pantalla extends JFrame {
 
     /**
      * Cambia entre pantallas (Menú o Juego) dentro del CardLayout.
-     * @param pantalla Nombre de la pantalla ("MENU" o "JUEGO").
+     * @param pantalla Nombre de la pantalla ("MENU", "CINEMATICA" o "JUEGO").
      */
+
     public void cambiarPantalla(String pantalla) {
+        if (pantalla.equals("CINEMATICA")) {
+            if (gestorMusica != null) gestorMusica.fadeOutMusica(2000); // 🔹 Fade-out de 2 segundos
+            contenedorPrincipal.add(new Cinematica(this), "CINEMATICA");
+        }
+
         cardLayout.show(contenedorPrincipal, pantalla);
 
         if ("JUEGO".equals(pantalla)) {
-            // Nos aseguramos que el componente de movimiento pueda capturar eventos de teclado.
             SwingUtilities.invokeLater(movimiento::requestFocusInWindow);
         }
     }
@@ -129,14 +143,8 @@ public class Pantalla extends JFrame {
 
             while (true) {
                 long startTime = System.nanoTime();
-
-                // Actualiza la lógica del juego
                 actualizar();
-
-                // Renderiza el juego
                 repaint();
-
-                // Calcula cuánto tiempo queda del frame y espera
                 long elapsedTime = System.nanoTime() - startTime;
                 long sleepTime = frameTime - elapsedTime;
 
@@ -159,9 +167,7 @@ public class Pantalla extends JFrame {
      * Actualiza cualquier lógica del juego que necesite cambiar entre frames.
      */
     private void actualizar() {
-        // 🔹 Actualiza el movimiento del jugador y lógica de las balas y enemigos
         movimiento.moverJugador();
-        // 🔹 Calcula y actualiza los FPS en el título de la ventana
         calcularYActualizarFPS();
     }
 
@@ -176,14 +182,29 @@ public class Pantalla extends JFrame {
         frameCount++;
         long currentTime = System.nanoTime();
 
-        // Si ha pasado más de 1 segundo, actualiza el título
         if (currentTime - lastTime >= 1_000_000_000L) {
-            double fps = frameCount / ((currentTime - lastTime) / 1e9); // Cuántos frames en 1 segundo
-            frameCount = 0; // Reiniciar el contador
-            lastTime = currentTime; // Reiniciar el tiempo
+            double fps = frameCount / ((currentTime - lastTime) / 1e9);
+            frameCount = 0;
+            lastTime = currentTime;
 
-            // Actualizar el título con los FPS
             SwingUtilities.invokeLater(() -> setTitle("Juego - FPS: " + String.format("%.2f", fps)));
         }
     }
+
+    //---------------------------------------------------
+    // 🔹 MÉTODOS GETTERS
+    //---------------------------------------------------
+
+    /**
+     * Devuelve la instancia de movimiento para asegurar el enfoque después de la cinemática.
+     * @return movimiento
+     */
+    public Movimiento getMovimiento() {
+        return movimiento;
+    }
+
+    public GestorMusica getGestorMusica() {
+        return gestorMusica;
+    }
+
 }

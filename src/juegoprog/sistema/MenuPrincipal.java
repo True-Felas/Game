@@ -2,20 +2,25 @@ package juegoprog.sistema;
 
 import juegoprog.graficos.Pantalla;
 import juegoprog.audio.GestorMusica;
+import juegoprog.cinematica.Cinematica;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Objects;
 
 public class MenuPrincipal extends JPanel {
     private Image fondo; // Imagen de fondo
     private final GestorMusica gestorMusica = new GestorMusica(); // Instancia de música
     private JLabel titulo; // 🔹 Referencia al título para animarlo
+    private JFrame ventana;
 
-    public MenuPrincipal(Pantalla pantalla) {
+    public MenuPrincipal(JFrame ventana) {
+        this.ventana = ventana;
+
         // Cargar la imagen de fondo desde resources
-        fondo = new ImageIcon(getClass().getResource("/resources/menu/Fondo2_4.png")).getImage();
+        fondo = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Fondo2_4.png"))).getImage();
 
         setLayout(null); // Usamos diseño absoluto para posicionar los botones manualmente
 
@@ -44,7 +49,9 @@ public class MenuPrincipal extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 gestorMusica.fadeOutMusica(2000); // 🔹 Fade out en 2 segundos
-                pantalla.cambiarPantalla("JUEGO");
+                Pantalla pantalla = (Pantalla) ventana;
+                pantalla.cambiarPantalla("CINEMATICA"); // Crea esta pantalla en Pantalla.java
+
             }
         });
         add(botonJugar);
