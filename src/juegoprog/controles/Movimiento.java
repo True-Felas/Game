@@ -46,6 +46,8 @@ public class Movimiento extends JPanel implements ActionListener {
     private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
 
     private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
+    private boolean enMinijuego = false; // 🔹 Para evitar múltiples activaciones
+
 
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
@@ -191,15 +193,21 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
 
+        System.out.println("📍 Posición del jugador -> X: " + personajeRealX + " | Y: " + personajeRealY);
 
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
 
-        // 🔹 Verificar si el jugador llegó a la caja fuerte
-        if (personajeRealX >= 2714 && personajeRealX <= 3819 && personajeRealY >= 2714 && personajeRealY <= 3819) {
+        if (!enMinijuego && personajeRealX == 2714 && personajeRealY >= 3808 && personajeRealY <= 3856) {
             System.out.println("📍 Accediendo al minijuego de la caja fuerte...");
-            ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE"); // 🔹 Llama al minijuego
+            enMinijuego = true; // 🔹 Evita múltiples activaciones
+            ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
+
         }
+
+
+
+
 
 
         // 🔹 Actualizar enemigos: movimiento hacia el personaje y colisiones con balas
@@ -223,6 +231,10 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
+    }
+
+    public void setEnMinijuego(boolean estado) {
+        this.enMinijuego = estado;
     }
 
 

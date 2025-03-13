@@ -50,6 +50,8 @@ public class Dial extends JPanel {
                     } else if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_SPACE) {
                         ultimoNumero = ajustarAngulo(angulo);
                         comprobarCombinacion();
+                    } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        ventana.cambiarPantalla("JUEGO"); // 🔹 Salir al juego si se presiona ESC
                     }
 
                     if (angulo < 0) angulo += 360;
@@ -59,9 +61,6 @@ public class Dial extends JPanel {
                 }
             }
         });
-
-
-
     }
 
     /** Ajusta el ángulo para que coincida con los valores correctos */
@@ -69,7 +68,6 @@ public class Dial extends JPanel {
         int anguloNormalizado = (int) ((angulo + 360) % 360);
         return (anguloNormalizado) % 360; // 🔹 Ajuste final para que 270° esté arriba
     }
-
 
     /** Comprueba si la combinación es correcta */
     private void comprobarCombinacion() {
