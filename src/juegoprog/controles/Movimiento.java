@@ -4,6 +4,7 @@ import juegoprog.elementos.GestorBalas;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.graficos.Pantalla;
 import juegoprog.jugador.Personaje;
 
 import javax.swing.*;
@@ -44,6 +45,8 @@ public class Movimiento extends JPanel implements ActionListener {
     /** GESTIÓN DE ENEMIGOS */
     private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
 
+    private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
+
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
     //---------------------------------------------------
@@ -52,7 +55,9 @@ public class Movimiento extends JPanel implements ActionListener {
      * Inicializa el movimiento, captura eventos de teclado y ratón,
      * y sincroniza la cámara con el escenario, colisiones y disparo de balas.
      */
-    public Movimiento(EscenarioDistritoSombrio escenario, ColisionesPanel colisiones, Personaje personaje) {
+
+    public Movimiento(Pantalla ventana, EscenarioDistritoSombrio escenario, ColisionesPanel colisiones, Personaje personaje) {
+        this.ventana = ventana; // 🔹 Guardamos la referencia a la ventana
         this.escenario = escenario;
         this.colisiones = colisiones;
         this.personaje = personaje;
@@ -161,8 +166,6 @@ public class Movimiento extends JPanel implements ActionListener {
     }
 
 
-
-
     //---------------------------------------------------
     //  🔹 LÓGICA PRINCIPAL DE MOVIMIENTO
     //---------------------------------------------------
@@ -188,8 +191,16 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
 
+
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
+
+        // 🔹 Verificar si el jugador llegó a la caja fuerte
+        if (personajeRealX >= 2714 && personajeRealX <= 3819 && personajeRealY >= 2714 && personajeRealY <= 3819) {
+            System.out.println("📍 Accediendo al minijuego de la caja fuerte...");
+            ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE"); // 🔹 Llama al minijuego
+        }
+
 
         // 🔹 Actualizar enemigos: movimiento hacia el personaje y colisiones con balas
         gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
@@ -213,6 +224,7 @@ public class Movimiento extends JPanel implements ActionListener {
         // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
     }
+
 
     /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */
     private boolean[] verificarColisiones(int personajeX, int personajeY) {

@@ -63,7 +63,7 @@ import java.net.URL;
 
     private void cargarImagen() {
         try {
-            URL url = getClass().getResource("/escenarios/distrito_sombrio.png");
+            URL url = getClass().getResource("/escenarios/distrito_sombrio2.png");
             if (url == null) {
                 System.err.println("❌ Imagen del escenario no encontrada.");
                 return;

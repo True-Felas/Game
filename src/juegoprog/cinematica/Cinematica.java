@@ -5,6 +5,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -33,15 +35,21 @@ public class Cinematica extends JPanel implements ActionListener {
         cargarImagenes();
 
         // 🔹 Reproducir música usando GestorMusica
-        ventana.getGestorMusica().reproducirMusica("/resources/audio/pruebacine.wav");
-
+        ventana.getGestorMusica().reproducirMusica("/resources/audio/Find Me Again_DS.wav");
 
         timer = new Timer(40, this);
         cambioImagenTimer = new Timer(20000, e -> siguienteImagen());
         timer.start();
         cambioImagenTimer.start();
-    }
 
+        // 🔹 Agregar MouseListener para terminar la cinemática al hacer clic
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                terminarCinematica();
+            }
+        });
+    }
 
     /** Cargamos las imágenes de la cinemática desde "resources". */
 
@@ -74,7 +82,6 @@ public class Cinematica extends JPanel implements ActionListener {
         ventana.cambiarPantalla("JUEGO");
         SwingUtilities.invokeLater(() -> ventana.getMovimiento().requestFocusInWindow());
     }
-
 
     /** Maneja la animación de fade-in y zoom */
     @Override
