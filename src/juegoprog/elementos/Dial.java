@@ -51,8 +51,12 @@ public class Dial extends JPanel {
                         ultimoNumero = ajustarAngulo(angulo);
                         comprobarCombinacion();
                     } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                        ventana.cambiarPantalla("JUEGO"); // 🔹 Salir al juego si se presiona ESC
+                        System.out.println("🔹 Saliendo del minijuego...");
+                        ventana.getMovimiento().setEnMinijuego(false); // 🔹 Resetea enMinijuego SIEMPRE
+                        ventana.cambiarPantalla("JUEGO");
                     }
+
+
 
                     if (angulo < 0) angulo += 360;
                     if (angulo >= 360) angulo -= 360;
@@ -76,8 +80,10 @@ public class Dial extends JPanel {
             if (pasoActual >= combinacion.length) {
                 desbloqueado = true;
                 JOptionPane.showMessageDialog(null, "¡Caja fuerte desbloqueada!");
-                ventana.cambiarPantalla("JUEGO"); // Regresa al juego tras desbloquear
+                ventana.getMovimiento().setEnMinijuego(false); // 🔹 Asegurar que se puede volver a entrar
+                ventana.cambiarPantalla("JUEGO"); // 🔹 Volver al juego después de desbloquear
             }
+
         }
     }
 

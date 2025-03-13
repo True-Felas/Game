@@ -47,6 +47,7 @@ public class Movimiento extends JPanel implements ActionListener {
 
     private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
     private boolean enMinijuego = false; // 🔹 Para evitar múltiples activaciones
+    private boolean mostrarMensajeMinijuego = false; // 🔹 Controla si mostramos "Pulsa ENTER para acceder al minijuego"
 
 
     //---------------------------------------------------
@@ -79,11 +80,22 @@ public class Movimiento extends JPanel implements ActionListener {
 
     /** Configura los eventos de teclado y ratón. */
     private void configurarEventos() {
+
         // Captura de teclado
         addKeyListener(new KeyAdapter() {
+
             @Override
             public void keyPressed(KeyEvent e) {
                 toggleMovement(e.getKeyCode(), true);
+
+                // 🔹 Si el jugador está en la zona y pulsa ENTER, entra al minijuego
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && mostrarMensajeMinijuego) {
+                    System.out.println("📍 Accediendo al minijuego...");
+                    enMinijuego = true;
+                    mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje al entrar
+                    ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
+                }
+
             }
 
             @Override
@@ -198,12 +210,17 @@ public class Movimiento extends JPanel implements ActionListener {
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
 
-        if (!enMinijuego && personajeRealX == 2714 && personajeRealY >= 3808 && personajeRealY <= 3856) {
-            System.out.println("📍 Accediendo al minijuego de la caja fuerte...");
-            enMinijuego = true; // 🔹 Evita múltiples activaciones
-            ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
-
+        // 🔹 Verificar si el jugador ha llegado a la caja fuerte
+        if (personajeRealX >= 2713 && personajeRealX <= 2715 && personajeRealY >= 3809 && personajeRealY <= 3857) {
+            if (!mostrarMensajeMinijuego) {
+                System.out.println("📍 Pulsa ENTER para acceder al minijuego");
+                mostrarMensajeMinijuego = true; // 🔹 Activa el mensaje en pantalla
+            }
+        } else {
+            mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje si se aleja
         }
+
+
 
 
 
@@ -299,8 +316,14 @@ public class Movimiento extends JPanel implements ActionListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2d = (Graphics2D) g; // 🔹 NO BORRAR ESTA LÍNEA
 
+        // 🔹 Si el mensaje está activado, mostrarlo en la pantalla
+        if (mostrarMensajeMinijuego) {
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 18));
+            g.drawString("Pulsa ENTER para acceder al minijuego", SCREEN_WIDTH / 2 - 150, 50);
+        }
         // Obtener la imagen del personaje
         Image imagenPersonaje = personaje.getImagen();
 

@@ -127,8 +127,9 @@ public class Pantalla extends JFrame {
         cardLayout.show(contenedorPrincipal, pantalla);
 
         if (pantalla.equals("JUEGO")) {
-            movimiento.setEnMinijuego(false); // 🔹 Permite volver a entrar al minijuego después de salir
+            movimiento.setEnMinijuego(false); // 🔹 Permite volver a entrar después de salir
         }
+
 
         if ("JUEGO".equals(pantalla)) {
             SwingUtilities.invokeLater(movimiento::requestFocusInWindow);
