@@ -9,55 +9,31 @@ import java.util.List;
 import java.util.Random;
 
 public class GestorEnemigos {
-    private static final List<Enemigo> enemigos = new ArrayList<>(); // Lista de enemigos
-    public int enemigosPorOleada = 3; // Cantidad de enemigos por oleada
+    private static final List<Enemigo> enemigos = new ArrayList<>(); // Lista de enemigos activos
+    private static final int MAX_ENEMIGOS = 20; // Máximo de enemigos activos
+    private final Random random = new Random(); // Generador de números aleatorios
+
+    // Coordenadas de los puntos de respawn existentes
+    private final int[][] puntosRespawn = {
+            {750, 420},       // Esquina Superior Izquierda
+            {3350, 679},      // Esquina Superior Derecha
+            {840, 4285}       // Esquina Inferior Izquierda
+    };
 
     /**
-     * Genera una nueva oleada de enemigos.
-     */
-    public void generarOleada(int anchoEscenario, int altoEscenario) {
-        Random random = new Random();
-
-        for (int i = 0; i < enemigosPorOleada; i++) {
-            // Generar un número aleatorio entre 1 y 3
-            int esquina = random.nextInt(3) + 1; // Esquinas predefinidas: 1, 2, 3
-
-            double x = 0, y = 0;
-
-            // Asignar las coordenadas de la esquina correspondiente
-            switch (esquina) {
-                case 1: // Esquina Superior Izquierda
-                    x = 750;
-                    y = 420;
-                    break;
-                case 2: // Esquina Superior Derecha
-                    x = 3350;
-                    y = 679;
-                    break;
-                case 3: // Esquina Inferior Izquierda
-                    x = 840;
-                    y = 4285;
-                    break;
-            }
-
-            // Crear un nuevo enemigo en la posición seleccionada
-            Enemigo enemigo = new Enemigo(x, y, 1); // ID o nivel de ejemplo
-            enemigos.add(enemigo);
-        }
-    }
-
-    /**
-     * Actualiza la posición y el estado de todos los enemigos activos.
+     * Actualiza la posición y el estado de todos los enemigos activos y genera nuevos
+     * enemigos en puntos de respawn aleatorios hasta el máximo definido.
      *
-     * @param objetivoX Coordenada X del personaje principal.
-     * @param objetivoY Coordenada Y del personaje principal.
-     * @param colisiones Referencia al sistema de colisiones.
+     * @param objetivoX       Coordenada X del personaje principal.
+     * @param objetivoY       Coordenada Y del personaje principal.
+     * @param colisiones      Referencia al sistema de colisiones.
      * @param desplazamientoX Desplazamiento actual en el eje X del mapa.
      * @param desplazamientoY Desplazamiento actual en el eje Y del mapa.
      */
     public void actualizar(double objetivoX, double objetivoY, ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
         Iterator<Enemigo> iterator = enemigos.iterator(); // Usamos un iterador para manejar la lista
 
+        // Actualizar enemigos activos
         while (iterator.hasNext()) {
             Enemigo enemigo = iterator.next();
             if (enemigo.isActivo()) {
@@ -67,16 +43,13 @@ public class GestorEnemigos {
                 iterator.remove();
             }
         }
-    }
 
-    /**
-     * Verifica si todos los enemigos actuales han sido eliminados.
-     *
-     * @return Verdadero si no queda ningún enemigo activo.
-     */
-    public boolean enemigosEliminados() {
-        // Usamos streams para verificar si queda algún enemigo activo
-        return enemigos.stream().noneMatch(Enemigo::isActivo);
+        // Generar nuevos enemigos para alcanzar el máximo permitido
+        while (enemigos.size() < MAX_ENEMIGOS) {
+            int[] respawn = puntosRespawn[random.nextInt(puntosRespawn.length)]; // Elegir punto de respawn
+            Enemigo nuevoEnemigo = new Enemigo(respawn[0], respawn[1], 1); // Crear enemigo con velocidad base
+            enemigos.add(nuevoEnemigo);
+        }
     }
 
     /**
@@ -96,7 +69,7 @@ public class GestorEnemigos {
 
                     // Si el enemigo muere, lo marcamos como inactivo
                     if (!enemigo.isActivo()) {
-                        enemigo.desactivar(); // Método que puedes definir en la clase `Enemigo`
+                        enemigo.desactivar();
                     }
                 }
             });
@@ -104,9 +77,9 @@ public class GestorEnemigos {
     }
 
     /**
-     * Dibuja a todos los enemigos activos.
+     * Dibuja a todos los enemigos activos en el contexto gráfico.
      *
-     * @param g Contexto gráfico.
+     * @param g              Contexto gráfico.
      * @param desplazamientoX Desplazamiento en el eje X.
      * @param desplazamientoY Desplazamiento en el eje Y.
      */
@@ -117,9 +90,18 @@ public class GestorEnemigos {
     }
 
     /**
+     * Devuelve si todos los enemigos están eliminados.
+     *
+     * @return Verdadero si no queda ningún enemigo activo.
+     */
+    public boolean enemigosEliminados() {
+        return enemigos.stream().noneMatch(Enemigo::isActivo); // Usamos streams para verificar si queda algún enemigo activo
+    }
+
+    /**
      * Devuelve la lista de enemigos activos.
      *
-     * @return Lista de enemigos.
+     * @return Lista de enemigos activos.
      */
     public static List<Enemigo> getEnemigos() {
         return new ArrayList<>(enemigos); // Devuelve una copia de la lista para evitar modificaciones externas

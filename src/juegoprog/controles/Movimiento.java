@@ -206,7 +206,7 @@ public class Movimiento extends JPanel implements ActionListener {
             double posJugadorY = personaje.getY();
 
             // Generar nueva oleada
-            gestorEnemigos.generarOleada(anchoEscenario, altoEscenario);
+            gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         }
 
 
