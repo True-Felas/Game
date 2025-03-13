@@ -1,7 +1,10 @@
 package juegoprog.audio;
 
 import javax.sound.sampled.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URL;
+import java.util.Timer;
 
 public class GestorMusica {
     private Clip musicaClip; // 🔹 Clip de audio que reproduce la música
@@ -10,7 +13,7 @@ public class GestorMusica {
      * Si ya hay una música sonando, se detiene antes de iniciar la nueva. */
 
     public void reproducirMusica(String ruta) {
-        detenerMusica(); // Para evitar superposiciones de música
+        detenerMusica(); // Asegurar que no haya música previa
 
         try {
             URL url = getClass().getResource(ruta);
@@ -19,9 +22,12 @@ public class GestorMusica {
                 return;
             }
 
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(url);
-            musicaClip = AudioSystem.getClip();
-            musicaClip.open(audioStream);
+            // 🔹 Optimización: Reutilizar Clip si ya existe, sin recrearlo cada vez
+            if (musicaClip == null) {
+                musicaClip = AudioSystem.getClip();
+            }
+
+            musicaClip.open(AudioSystem.getAudioInputStream(url));
             musicaClip.loop(Clip.LOOP_CONTINUOUSLY); // 🔹 Se repetirá en bucle
             musicaClip.start();
         } catch (Exception e) {
@@ -41,26 +47,33 @@ public class GestorMusica {
     /** Aplica un efecto de fade out antes de detener la música.
      * Reduce gradualmente el volumen hasta 0 y luego detiene la música. */
 
-    public void fadeOutMusica(int duracion) {
-        if (musicaClip == null || !musicaClip.isRunning()) return; // Si no hay música, salir
+    public void fadeOutMusica(int tiempo) {
+        if (musicaClip == null || !musicaClip.isRunning()) return;
 
-        new Thread(() -> {
-            try {
-                FloatControl controlVolumen = (FloatControl) musicaClip.getControl(FloatControl.Type.MASTER_GAIN);
-                float volumenActual = controlVolumen.getValue();
-                float paso = volumenActual / (duracion / 100); // 🔹 Ajuste progresivo del volumen
+        FloatControl volumeControl = (FloatControl) musicaClip.getControl(FloatControl.Type.MASTER_GAIN);
+        float minVolume = volumeControl.getMinimum();
+        float currentVolume = volumeControl.getValue();
+        int pasos = tiempo / 25; // 🔹 Se reduce el tiempo entre pasos para que sea más rápido
 
-                for (int i = 0; i < (duracion / 100); i++) {
-                    volumenActual -= paso;
-                    controlVolumen.setValue(volumenActual);
-                    Thread.sleep(100); // 🔹 Espera breve para hacer la transición suave
+        new javax.swing.Timer(25, new ActionListener() { // 🔹 Ahora cada 25ms en lugar de 50ms
+            int contador = 0;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (contador >= pasos) {
+                    ((javax.swing.Timer) e.getSource()).stop();
+                    musicaClip.stop();
+                    musicaClip.close();
+                } else {
+                    float newVolume = currentVolume - ((currentVolume - minVolume) / pasos) * contador;
+                    volumeControl.setValue(newVolume);
+                    contador++;
                 }
-
-                detenerMusica(); // 🔹 Detiene la música cuando el volumen llega a 0
-            } catch (Exception e) {
-                System.err.println("❌ Error en fade out: " + e.getMessage());
             }
         }).start();
     }
+
+
+
 }
 
