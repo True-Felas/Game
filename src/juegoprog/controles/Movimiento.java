@@ -309,7 +309,7 @@ public class Movimiento extends JPanel implements ActionListener {
         if (mostrarMensajeMinijuego) {
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 18));
-            g.drawString("Pulsa ENTER para acceder al minijuego", SCREEN_WIDTH / 2 - 150, 50);
+            g.drawString("Pulsa ENTER para abrir la caja fuerte", SCREEN_WIDTH / 2 - 150, 50);
         }
 
         // Obtener la imagen del personaje
