@@ -15,10 +15,6 @@ public class Enemigo {
 
     private final Random random = new Random();
 
-    // Velocidades
-    private final double velocidadBase = 1;
-    private final double velocidadPersecucion = 4;
-
     // Movimiento aleatorio
     private double objetivoX;        // Destino X al que se moverá aleatoriamente
     private double objetivoY;        // Destino Y al que se moverá aleatoriamente
@@ -37,7 +33,7 @@ public class Enemigo {
      * @param xInicial Posición inicial X del enemigo.
      * @param yInicial Posición inicial Y del enemigo.
      */
-    public Enemigo(double xInicial, double yInicial, double velocidad) {
+    public Enemigo(double xInicial, double yInicial) {
         this.x = xInicial;
         this.y = yInicial;
         calcularDestinoAleatorio(); // Calcula un primer destino aleatorio inicial
@@ -76,6 +72,7 @@ public class Enemigo {
     private void perseguirJugador(double objetivoXJugador, double objetivoYJugador, ColisionesPanel colisiones,
                                   int desplazamientoX, int desplazamientoY) {
         // Movimiento hacia el jugador
+        double velocidadPersecucion = 4;
         moverHaciaDestino(objetivoXJugador, objetivoYJugador, velocidadPersecucion, colisiones, desplazamientoX, desplazamientoY);
     }
 
@@ -91,6 +88,8 @@ public class Enemigo {
         }
 
         // Intenta moverse hacia el destino actual
+        // Velocidades
+        double velocidadBase = 1;
         if (!moverHaciaDestino(objetivoX, objetivoY, velocidadBase, colisiones, desplazamientoX, desplazamientoY)) {
             intentosMoverse++; // Incrementa el contador si no logra avanzar
         }

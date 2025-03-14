@@ -4,7 +4,6 @@ import javax.sound.sampled.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
-import java.util.Timer;
 
 public class GestorMusica {
     private Clip musicaClip; // 🔹 Clip de audio que reproduce la música
@@ -72,8 +71,5 @@ public class GestorMusica {
             }
         }).start();
     }
-
-
-
 }
 

@@ -10,11 +10,11 @@ public class Main {
          System.setProperty("sun.java2d.uiScale", "1.0");
 
         // 🔹 Iniciar la pantalla del juego
-        Pantalla pantalla = new Pantalla();
+        new Pantalla();
 
-        /* 🔹 Si se desactiva el escalado se le da un *1.5 a la pantalla para que aumente un poco.*/
-        //pantalla.setSize((int)(pantalla.getWidth() * 1.5), (int)(pantalla.getHeight() * 1.5));
-        //pantalla.setPreferredSize(new Dimension(pantalla.getWidth(), pantalla.getHeight()));
+        /* 🔹 Si se desactiva el escalado se le da un *1.5 a la pantalla para que aumente un poco.
+        pantalla.setSize((int)(pantalla.getWidth() * 1.5), (int)(pantalla.getHeight() * 1.5));
+        //pantalla.setPreferredSize(new Dimension(pantalla.getWidth(), pantalla.getHeight()));*/
     }
 }
 

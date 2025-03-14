@@ -7,11 +7,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Objects;
 import javax.imageio.ImageIO;
 
 public class Dial extends JPanel {
     private double angulo = 270; // 🔹 Ajuste inicial
-    private int[] combinacion = {30, 180, 120}; // Secuencia correcta
+    private final int[] combinacion = {30, 180, 120}; // Secuencia correcta
     private int pasoActual = 0;
     private boolean desbloqueado = false;
     private final Pantalla ventana; // Referencia a la pantalla principal
@@ -26,7 +27,7 @@ public class Dial extends JPanel {
 
         // Cargar imagen de fondo
         try {
-            imagenFondo = ImageIO.read(getClass().getResource("/resources/graficos/Caja_fuerte.png"));
+            imagenFondo = ImageIO.read(Objects.requireNonNull(getClass().getResource("/resources/graficos/Caja_fuerte.png")));
         } catch (IOException e) {
             System.err.println("❌ Error al cargar la imagen de la caja fuerte: " + e.getMessage());
         }
@@ -44,9 +45,9 @@ public class Dial extends JPanel {
             public void keyPressed(KeyEvent e) {
                 if (!desbloqueado) {
                     if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        angulo -= 5; // 🔹 AHORA la derecha aumenta en sentido horario
+                        angulo += 5; // 🔹 AHORA la derecha aumenta en sentido horario
                     } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        angulo += 5; // 🔹 AHORA la izquierda disminuye en sentido antihorario
+                        angulo -= 5; // 🔹 AHORA la izquierda disminuye en sentido antihorario
                     } else if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_SPACE) {
                         ultimoNumero = ajustarAngulo(angulo);
                         comprobarCombinacion();

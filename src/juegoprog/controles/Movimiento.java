@@ -32,7 +32,7 @@ public class Movimiento extends JPanel implements ActionListener {
 
     /** CONTROL DEL RATÓN Y DESPLAZAMIENTO DEL MAPA */
     private final Point posicionRaton = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2); // 🔹 Posición del puntero
-    private int desplazamientoX = 0, desplazamientoY = 0; // 🔹 Desplazamiento del escenario
+    private int desplazamientoX, desplazamientoY; // 🔹 Desplazamiento del escenario
 
     /** REFERENCIAS AL ESCENARIO Y COLISIONES */
     private final EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario
@@ -46,7 +46,7 @@ public class Movimiento extends JPanel implements ActionListener {
     private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
 
     private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
-    private boolean enMinijuego = false; // Controla si el jugador está en un minijuego
+    public boolean enMinijuego = false; // Controla si el jugador está en un minijuego
     private boolean mostrarMensajeMinijuego = false; // 🔹 Controla si mostramos "Pulsa ENTER para acceder al minijuego"
 
     //---------------------------------------------------
@@ -173,7 +173,6 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Llamar al gestor de balas para disparar
         gestorBalas.disparar(xInicial, yInicial, objetivoX, objetivoY);
-        System.out.println(xInicial +", "+ yInicial);
     }
 
 
@@ -185,12 +184,9 @@ public class Movimiento extends JPanel implements ActionListener {
      * Sincroniza el desplazamiento del mapa con las colisiones y gestiona las balas.
      */
     public void moverJugador() {
-        // La posición "central" del jugador en la pantalla.
-        int personajeX = desplazamientoX + SCREEN_WIDTH / 2;
-        int personajeY = desplazamientoY + SCREEN_HEIGHT / 2;
 
         // Verificar colisiones en las cuatro direcciones
-        boolean[] colisionesDirecciones = verificarColisiones(personajeX, personajeY);
+        boolean[] colisionesDirecciones = verificarColisiones();
 
         // Calcular movimiento basado en las teclas y las colisiones
         double[] movimiento = calcularMovimiento(colisionesDirecciones);
@@ -224,14 +220,6 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // 🔹 Añadir lógica de oleadas de enemigos
         if (gestorEnemigos.enemigosEliminados()) {
-            // Determinar las dimensiones del escenario
-            int anchoEscenario = escenario.getAncho(); // Métodos para obtener dimensiones del escenario
-            int altoEscenario = escenario.getAlto();
-
-            // Posición del jugador
-            double posJugadorX = personaje.getX();
-            double posJugadorY = personaje.getY();
-
             // Generar nueva oleada
             gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         }
@@ -243,7 +231,7 @@ public class Movimiento extends JPanel implements ActionListener {
 
 
     /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */
-    private boolean[] verificarColisiones(int personajeX, int personajeY) {
+    private boolean[] verificarColisiones() {
         int hitbox = 10;
 
         // Ajustamos las coordenadas globales basadas en el desplazamiento del mapa
