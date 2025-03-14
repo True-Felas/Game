@@ -75,18 +75,66 @@ public class Dial extends JPanel {
     }
 
     /** Comprueba si la combinación es correcta */
+    private int intentosFallidos = 0; // Contador de intentos fallidos
+
+    /** Comprueba si la combinación es correcta */
     private void comprobarCombinacion() {
-        if (Math.abs(ultimoNumero - combinacion[pasoActual]) < 10) {
+        if (ultimoNumero == combinacion[pasoActual]) { // 🔹 Solo avanza si el número es EXACTO
             pasoActual++;
+            intentosFallidos = 0; // 🔹 Reinicia el contador de errores si acierta
+
             if (pasoActual >= combinacion.length) {
                 desbloqueado = true;
-                JOptionPane.showMessageDialog(null, "¡Caja fuerte desbloqueada!");
-                ventana.getMovimiento().setEnMinijuego(false); // 🔹 Asegurar que se puede volver a entrar
-                ventana.cambiarPantalla("JUEGO"); // 🔹 Volver al juego después de desbloquear
-            }
 
+                // 🔹 Mostrar mensaje narrativo
+                JOptionPane.showMessageDialog(
+                        null,
+                        "<html><center>La caja cede con un clic metálico…<br>Dentro, los secretos que alguien no quería que viera.</center></html>",
+                        "CAJA FUERTE DESBLOQUEADA",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+                // 🔹 Mostrar la imagen de los documentos
+                JLabel texto = new JLabel("¡Has encontrado los documentos que buscabas!", SwingConstants.CENTER);
+                texto.setFont(new Font("Arial", Font.BOLD, 25));
+                texto.setForeground(Color.WHITE);
+
+                JPanel panelMensaje = new JPanel();
+                panelMensaje.setBackground(Color.BLACK);
+                panelMensaje.add(texto);
+
+                JPanel panel = new JPanel(new BorderLayout());
+                panel.add(panelMensaje, BorderLayout.NORTH);
+                panel.add(new JLabel(new ImageIcon(getClass().getResource("/resources/graficos/documentos.png"))), BorderLayout.CENTER);
+
+                JDialog dialogo = new JDialog();
+                dialogo.setTitle("Documentos encontrados");
+                dialogo.setModal(true);
+                dialogo.setContentPane(panel);
+                dialogo.pack();
+                dialogo.setLocationRelativeTo(null);
+
+                // 🔹 Habilitar ESC para cerrar
+                dialogo.getRootPane().registerKeyboardAction(e -> dialogo.dispose(),
+                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+                dialogo.setVisible(true);
+
+                ventana.getMovimiento().setEnMinijuego(false);
+                ventana.cambiarPantalla("JUEGO");
+            }
+        } else {
+            intentosFallidos++; // 🔹 Aumenta el contador de intentos fallidos
+
+            if (intentosFallidos >= 3) { // 🔹 Si falla 3 veces, reinicia todo y muestra error
+                pasoActual = 0;
+                intentosFallidos = 0;
+                JOptionPane.showMessageDialog(null, "Combinación incorrecta. Inténtalo de nuevo.", "NO HUBO SUERTE", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
+
+
 
     /** Dibuja la caja fuerte con el dial y los grados numerados */
     @Override

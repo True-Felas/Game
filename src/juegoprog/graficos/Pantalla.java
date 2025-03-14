@@ -12,6 +12,7 @@ import juegoprog.controles.Movimiento;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 /** Clase principal para gestionar la pantalla principal y las distintas vistas (Menú y Juego).
  * También implementa el bucle principal para la lógica y el renderizado del juego. */
@@ -29,6 +30,7 @@ public class Pantalla extends JFrame {
     private long lastTime = System.nanoTime(); // Última medición de tiempo
 
     private final GestorMusica gestorMusica;
+    private Image tejados;
 
 
     //---------------------------------------------------
@@ -88,6 +90,9 @@ public class Pantalla extends JFrame {
 
         // 🔹 Registrar el minijuego de la caja fuerte en el CardLayout
         contenedorPrincipal.add(new juegoprog.elementos.Dial(this), "MINIJUEGO_CAJA_FUERTE");
+
+        // 🔹 Cargar la imagen de los tejados
+        tejados = new ImageIcon(Objects.requireNonNull(getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))).getImage();
 
         gestorMusica = new GestorMusica();
 
@@ -196,5 +201,10 @@ public class Pantalla extends JFrame {
     public GestorMusica getGestorMusica() {
         return gestorMusica;
     }
+
+    public Image getTejados() {
+        return tejados;
+    }
+
 
 }

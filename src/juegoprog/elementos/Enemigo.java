@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class Enemigo {
     private double x, y;             // Posición actual del enemigo
-    private final int tamano = 50;   // Tamaño del cuadrado que representa al enemigo
+    private final int tamano = 60;   // Tamaño del cuadrado que representa al enemigo
     private boolean activo = true;   // Indica si está activo (vivo) o eliminado
     private int vida = 3;            // Vida del enemigo
 
