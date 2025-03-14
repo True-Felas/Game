@@ -83,12 +83,11 @@ public class GestorEnemigos {
      * @param desplazamientoX Desplazamiento en el eje X.
      * @param desplazamientoY Desplazamiento en el eje Y.
      */
-    public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY, double personajeX, double personajeY) {
+    public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
         for (Enemigo enemigo : enemigos) {
-            enemigo.dibujar(g, desplazamientoX, desplazamientoY, personajeX, personajeY);
+            enemigo.dibujar(g, desplazamientoX, desplazamientoY);
         }
     }
-
 
     /**
      * Devuelve si todos los enemigos están eliminados.
