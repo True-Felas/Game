@@ -156,9 +156,20 @@ public class Enemigo {
     private ImageIcon imagenEnemigo;
 
     /** Carga la imagen del enemigo desde resources (GIF animado) */
+    /** Carga la imagen del enemigo desde resources y la escala */
     private void cargarImagen() {
-        imagenEnemigo = new ImageIcon(getClass().getResource("/resources/personaje/enemigo_cuchillo.gif"));
+        ImageIcon iconoOriginal = new ImageIcon(getClass().getResource("/resources/personaje/enemigo_cuchillo.gif"));
+
+        if (iconoOriginal.getIconWidth() > 0 && iconoOriginal.getIconHeight() > 0) {
+            // Escalar la imagen manteniendo la animación del GIF
+            Image imagenEscalada = iconoOriginal.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT);
+            imagenEnemigo = new ImageIcon(imagenEscalada);
+        } else {
+            System.err.println("⚠ No se pudo cargar la imagen del enemigo.");
+            imagenEnemigo = null;
+        }
     }
+
 
 
     /**
