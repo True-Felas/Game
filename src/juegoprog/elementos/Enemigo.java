@@ -2,11 +2,9 @@ package juegoprog.elementos;
 
 import juegoprog.escenarios.ColisionesPanel;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.util.Objects;
 import java.util.Random;
 
 public class Enemigo {
@@ -18,7 +16,7 @@ public class Enemigo {
     private final Random random = new Random();
 
     // Velocidades
-    private final double velocidadBase = 2;
+    private final double velocidadBase = 1;
     private final double velocidadPersecucion = 4;
 
     // Movimiento aleatorio
@@ -27,20 +25,26 @@ public class Enemigo {
     private int tiempoCambioDireccion = 0; // Contador que determina cuándo cambiar de destino aleatorio
     private int intentosMoverse = 0; // Recuento de intentos por moverse sin éxito (atascos)
 
+    // Imagen del enemigo
+    private final Image imagenEnemigo;
+
+    // Ángulo de rotación para que el enemigo mire hacia donde se mueve
+    private double anguloRotacion = 0;
+
     /**
      * Constructor del enemigo.
      *
      * @param xInicial Posición inicial X del enemigo.
      * @param yInicial Posición inicial Y del enemigo.
      */
-    /** Constructor del enemigo */
     public Enemigo(double xInicial, double yInicial, double velocidad) {
         this.x = xInicial;
         this.y = yInicial;
-        cargarImagen(); // 🔹 Cargar la imagen del enemigo al crearlo
-        calcularDestinoAleatorio(); // 🔹 Calcula un primer destino aleatorio inicial
+        calcularDestinoAleatorio(); // Calcula un primer destino aleatorio inicial
+        // Cargar la imagen del enemigo desde la ruta especificada
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/personaje/enemigo_cuchillo.gif")));
+        this.imagenEnemigo = icon.getImage();
     }
-
 
     /**
      * Mueve el enemigo en función de su estado actual.
@@ -57,7 +61,7 @@ public class Enemigo {
 
         double distanciaJugador = Math.hypot(objetivoXJugador - x, objetivoYJugador - y);
 
-        if (distanciaJugador < 200) {
+        if (distanciaJugador < 250) {
             // Si el jugador está cerca, perseguir
             perseguirJugador(objetivoXJugador, objetivoYJugador, colisiones, desplazamientoX, desplazamientoY);
         } else {
@@ -121,6 +125,9 @@ public class Enemigo {
         double nuevoX = x + deltaX * factor;
         double nuevoY = y + deltaY * factor;
 
+        // Calcular el ángulo de rotación basado en la dirección del movimiento
+        anguloRotacion = Math.atan2(deltaY, deltaX);
+
         // Revisar colisiones
         if (!colisiones.hayColision((int) (nuevoX - desplazamientoX), (int) (nuevoY - desplazamientoY))) {
             // Aplicar movimiento si no hay colisión
@@ -152,62 +159,29 @@ public class Enemigo {
         objetivoX = random.nextInt(4000); // Rango del ancho del mapa
         objetivoY = random.nextInt(4000); // Rango del alto del mapa
     }
-    // Variable para almacenar la imagen del enemigo
-    private ImageIcon imagenEnemigo;
-
-    /** Carga la imagen del enemigo desde resources (GIF animado) */
-    /** Carga la imagen del enemigo desde resources y la escala */
-    private void cargarImagen() {
-        ImageIcon iconoOriginal = new ImageIcon(getClass().getResource("/resources/personaje/enemigo_cuchillo.gif"));
-
-        if (iconoOriginal.getIconWidth() > 0 && iconoOriginal.getIconHeight() > 0) {
-            // Escalar la imagen manteniendo la animación del GIF
-            Image imagenEscalada = iconoOriginal.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT);
-            imagenEnemigo = new ImageIcon(imagenEscalada);
-        } else {
-            System.err.println("⚠ No se pudo cargar la imagen del enemigo.");
-            imagenEnemigo = null;
-        }
-    }
-
-
 
     /**
-     * Dibuja al enemigo como un cuadrado rojo con la vida mostrada sobre él.
+     * Dibuja al enemigo con la rotación adecuada.
      */
-
-    /** Dibuja al enemigo en pantalla con su animación, rotado hacia el personaje */
-    public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY, double personajeX, double personajeY) {
+    public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
         if (!activo) return;
 
         int xVisible = (int) x - desplazamientoX;
         int yVisible = (int) y - desplazamientoY;
 
-        // Calcular el ángulo entre el enemigo y el personaje
-        double angulo = Math.atan2(personajeY - y, personajeX - x);
-
-        // Dibujar el enemigo con rotación
+        // Convertir Graphics a Graphics2D para usar transformaciones
         Graphics2D g2d = (Graphics2D) g.create();
+
+        // Aplicar la rotación al dibujar la imagen
         g2d.translate(xVisible, yVisible);
-        g2d.rotate(angulo, tamano / 2.0, tamano / 2.0); // 🔹 Rotar respecto al centro del sprite
+        g2d.rotate(anguloRotacion);
+        g2d.drawImage(imagenEnemigo, -tamano / 2, -tamano / 2, tamano, tamano, null);
+        g2d.dispose(); // Liberar recursos de Graphics2D
 
-        if (imagenEnemigo != null) {
-            imagenEnemigo.paintIcon(null, g2d, -tamano / 2, -tamano / 2);
-        } else {
-            // Si la imagen no carga, se dibuja un cuadrado rojo
-            g2d.setColor(Color.RED);
-            g2d.fillRect(-tamano / 2, -tamano / 2, tamano, tamano);
-        }
-
-        g2d.dispose(); // 🔹 Liberar recursos gráficos
-
-        // Dibujar la vida encima del enemigo
+        // Dibuja la vida encima del enemigo
         g.setColor(Color.WHITE);
         g.drawString("Vida: " + getVida(), xVisible - 20, yVisible - tamano / 2 - 5);
     }
-
-
-
 
     public boolean colisionaCon(double balaX, double balaY) {
         return balaX >= x - (double) tamano / 2 && balaX <= x + (double) tamano / 2 &&

@@ -332,7 +332,7 @@ public class Movimiento extends JPanel implements ActionListener {
         gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
 
         // 🔹 Dibujar enemigos
-        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY, personaje.getX(), personaje.getY());
+        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY);
 
 
     }
