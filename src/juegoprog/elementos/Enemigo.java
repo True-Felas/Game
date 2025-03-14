@@ -2,7 +2,11 @@ package juegoprog.elementos;
 
 import juegoprog.escenarios.ColisionesPanel;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Random;
 
 public class Enemigo {
@@ -29,11 +33,14 @@ public class Enemigo {
      * @param xInicial Posición inicial X del enemigo.
      * @param yInicial Posición inicial Y del enemigo.
      */
+    /** Constructor del enemigo */
     public Enemigo(double xInicial, double yInicial, double velocidad) {
         this.x = xInicial;
         this.y = yInicial;
-        calcularDestinoAleatorio(); // Calcula un primer destino aleatorio inicial
+        cargarImagen(); // 🔹 Cargar la imagen del enemigo al crearlo
+        calcularDestinoAleatorio(); // 🔹 Calcula un primer destino aleatorio inicial
     }
+
 
     /**
      * Mueve el enemigo en función de su estado actual.
@@ -145,24 +152,51 @@ public class Enemigo {
         objetivoX = random.nextInt(4000); // Rango del ancho del mapa
         objetivoY = random.nextInt(4000); // Rango del alto del mapa
     }
+    // Variable para almacenar la imagen del enemigo
+    private ImageIcon imagenEnemigo;
+
+    /** Carga la imagen del enemigo desde resources (GIF animado) */
+    private void cargarImagen() {
+        imagenEnemigo = new ImageIcon(getClass().getResource("/resources/personaje/enemigo_cuchillo.gif"));
+    }
+
 
     /**
      * Dibuja al enemigo como un cuadrado rojo con la vida mostrada sobre él.
      */
-    public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
+
+    /** Dibuja al enemigo en pantalla con su animación, rotado hacia el personaje */
+    public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY, double personajeX, double personajeY) {
         if (!activo) return;
 
         int xVisible = (int) x - desplazamientoX;
         int yVisible = (int) y - desplazamientoY;
 
-        // Dibuja el cuadrado
-        g.setColor(Color.RED);
-        g.fillRect(xVisible - tamano / 2, yVisible - tamano / 2, tamano, tamano);
+        // Calcular el ángulo entre el enemigo y el personaje
+        double angulo = Math.atan2(personajeY - y, personajeX - x);
 
-        // Dibuja la vida encima del enemigo
+        // Dibujar el enemigo con rotación
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.translate(xVisible, yVisible);
+        g2d.rotate(angulo, tamano / 2.0, tamano / 2.0); // 🔹 Rotar respecto al centro del sprite
+
+        if (imagenEnemigo != null) {
+            imagenEnemigo.paintIcon(null, g2d, -tamano / 2, -tamano / 2);
+        } else {
+            // Si la imagen no carga, se dibuja un cuadrado rojo
+            g2d.setColor(Color.RED);
+            g2d.fillRect(-tamano / 2, -tamano / 2, tamano, tamano);
+        }
+
+        g2d.dispose(); // 🔹 Liberar recursos gráficos
+
+        // Dibujar la vida encima del enemigo
         g.setColor(Color.WHITE);
         g.drawString("Vida: " + getVida(), xVisible - 20, yVisible - tamano / 2 - 5);
     }
+
+
+
 
     public boolean colisionaCon(double balaX, double balaY) {
         return balaX >= x - (double) tamano / 2 && balaX <= x + (double) tamano / 2 &&
