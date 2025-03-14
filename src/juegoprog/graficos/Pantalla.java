@@ -8,7 +8,6 @@ import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.jugador.Personaje;
 import juegoprog.sistema.MenuPrincipal;
 import juegoprog.controles.Movimiento;
-import juegoprog.elementos.Dial;
 
 
 import javax.swing.*;
@@ -24,15 +23,7 @@ public class Pantalla extends JFrame {
 
     private final CardLayout cardLayout;
     private final JPanel contenedorPrincipal;
-    private final JLayeredPane capaJuego;
     private final Movimiento movimiento;
-    private final EscenarioDistritoSombrio escenario;
-    private final ColisionesPanel colisiones;
-    private final Minimapa minimapa;
-
-    // 🔹 Nuevos atributos (modificación para enemigos)
-    private Personaje personaje;  // Personaje principal
-    private final GestorEnemigos gestorEnemigos; // Gestor central de enemigos
 
     private int frameCount = 0; // Contador de frames
     private long lastTime = System.nanoTime(); // Última medición de tiempo
@@ -64,33 +55,31 @@ public class Pantalla extends JFrame {
         contenedorPrincipal.add(new MenuPrincipal(this), "MENU");
 
         // 🔹 Configuración de la pantalla de juego con capas
-        capaJuego = new JLayeredPane();
+        JLayeredPane capaJuego = new JLayeredPane();
         capaJuego.setPreferredSize(new Dimension(1280, 720));
 
         // 🔹 Fondo del escenario
-        escenario = new EscenarioDistritoSombrio();
+        EscenarioDistritoSombrio escenario = new EscenarioDistritoSombrio();
         escenario.setBounds(0, 0, 4472, 4816); // Coordenadas para el fondo del mapa completo
         capaJuego.add(escenario, JLayeredPane.DEFAULT_LAYER);
 
         // 🔹 PNG de colisiones (capa oculta para detectar colisiones en el mapa)
-        colisiones = new ColisionesPanel();
+        ColisionesPanel colisiones = new ColisionesPanel();
         colisiones.setBounds(0, 0, 4472, 4816);
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
         // 🔹 Crear el objeto Personaje para pasarlo al controlador Movimiento
-        personaje = new Personaje();
+        // 🔹 Nuevos atributos (modificación para enemigos)
+        // Personaje principal
+        Personaje personaje = new Personaje();
 
         // 🔹 Configuración del Control de Movimiento (Personaje, Enemigos y Balas)
         movimiento = new Movimiento(this, escenario, colisiones, personaje); // 🔹 Se agrega 'this' para pasar la referencia de Pantalla
         movimiento.setBounds(0, 0, 1280, 720); // Tamaño de la "vista" de la pantalla
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
-
-        // 🔹 Crear el gestor de enemigos
-        gestorEnemigos = new GestorEnemigos();
-
         // 🔹 Minimapa para mostrar la posición del jugador y el mapa entero
-        minimapa = new Minimapa(personaje, gestorEnemigos, 4472, 4816);
+        Minimapa minimapa = new Minimapa(personaje, 4472, 4816);
         minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236); // Coloca el minimapa en una esquina.
         capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Capas superiores.
 

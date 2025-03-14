@@ -47,7 +47,7 @@ public class GestorEnemigos {
         // Generar nuevos enemigos para alcanzar el máximo permitido
         while (enemigos.size() < MAX_ENEMIGOS) {
             int[] respawn = puntosRespawn[random.nextInt(puntosRespawn.length)]; // Elegir punto de respawn
-            Enemigo nuevoEnemigo = new Enemigo(respawn[0], respawn[1], 1); // Crear enemigo con velocidad base
+            Enemigo nuevoEnemigo = new Enemigo(respawn[0], respawn[1]); // Crear enemigo con velocidad base
             enemigos.add(nuevoEnemigo);
         }
     }

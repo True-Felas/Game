@@ -7,8 +7,6 @@ import java.util.Objects;
 
 public class Personaje extends JPanel {
     private Image imagen; // La imagen del personaje
-    private final int ancho = 60;
-    private final int alto = 60; // Tamaño del personaje
 
     // Posición actual del personaje
     private int x = 50; // Coordenada X inicial
@@ -27,6 +25,10 @@ public class Personaje extends JPanel {
     public void cargarImagen(String rutaImagen) {
         try {
             ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(rutaImagen)));
+
+            // Tamaño del personaje
+            int alto = 60;
+            int ancho = 60;
             this.imagen = icon.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
         } catch (Exception e) {
             System.err.println("Error al cargar la imagen: " + rutaImagen);
