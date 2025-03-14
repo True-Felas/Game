@@ -46,9 +46,8 @@ public class Movimiento extends JPanel implements ActionListener {
     private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
 
     private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
-    private boolean enMinijuego = false; // 🔹 Para evitar múltiples activaciones
+    private boolean enMinijuego = false; // Controla si el jugador está en un minijuego
     private boolean mostrarMensajeMinijuego = false; // 🔹 Controla si mostramos "Pulsa ENTER para acceder al minijuego"
-
 
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
@@ -80,10 +79,8 @@ public class Movimiento extends JPanel implements ActionListener {
 
     /** Configura los eventos de teclado y ratón. */
     private void configurarEventos() {
-
         // Captura de teclado
         addKeyListener(new KeyAdapter() {
-
             @Override
             public void keyPressed(KeyEvent e) {
                 toggleMovement(e.getKeyCode(), true);
@@ -205,7 +202,6 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
 
-        System.out.println("📍 Posición del jugador -> X: " + personajeRealX + " | Y: " + personajeRealY);
 
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
@@ -219,11 +215,6 @@ public class Movimiento extends JPanel implements ActionListener {
         } else {
             mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje si se aleja
         }
-
-
-
-
-
 
 
 
@@ -248,10 +239,6 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
-    }
-
-    public void setEnMinijuego(boolean estado) {
-        this.enMinijuego = estado;
     }
 
 
@@ -324,6 +311,7 @@ public class Movimiento extends JPanel implements ActionListener {
             g.setFont(new Font("Arial", Font.BOLD, 18));
             g.drawString("Pulsa ENTER para acceder al minijuego", SCREEN_WIDTH / 2 - 150, 50);
         }
+
         // Obtener la imagen del personaje
         Image imagenPersonaje = personaje.getImagen();
 
@@ -348,9 +336,14 @@ public class Movimiento extends JPanel implements ActionListener {
 
 
     }
+    public void setEnMinijuego(boolean estado) {
+        this.enMinijuego = estado;
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
     }
+
+
 }
