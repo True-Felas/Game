@@ -1,5 +1,6 @@
 package juegoprog.controles;
 
+import juegoprog.audio.GestorSonidos;
 import juegoprog.elementos.GestorBalas;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
@@ -46,11 +47,17 @@ public class Movimiento extends JPanel implements ActionListener {
     private final GestorBalas gestorBalas = new GestorBalas(); // 🔹 Clase auxiliar para manejo de balas
 
     /** GESTIÓN DE ENEMIGOS */
-    private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
+    private GestorSonidos gestorSonidos = new GestorSonidos();
+    private final GestorEnemigos gestorEnemigos = new GestorEnemigos(gestorSonidos); // 🔹 Clase para manejar enemigos
 
     private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
     public boolean enMinijuego = false; // Controla si el jugador está en un minijuego
     private boolean mostrarMensajeMinijuego = false; // 🔹 Controla si mostramos "Pulsa ENTER para acceder al minijuego"
+
+    private boolean estaCaminando = false;
+    private boolean estaCorriendo = false;
+    private boolean alarmaActivada = false; // 🔹 Ahora es un atributo global y no se resetea cada frame
+
 
     //---------------------------------------------------
     //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
@@ -168,19 +175,23 @@ public class Movimiento extends JPanel implements ActionListener {
      * La bala se inicia en el centro de la pantalla y se mueve hacia
      * la posición del ratón relativa a la ventana.
      */
+    /** Dispara una nueva bala hacia la posición del ratón. */
     private void dispararBala() {
+        // 🔹 Reproducir sonido de disparo
+        gestorSonidos.reproducirEfecto("/audio/NoirShotC.wav");
+
         // Coordenadas iniciales: el centro de la pantalla
         double xInicial = personaje.getX();
         double yInicial = personaje.getY();
 
-        // Coordenadas objetiv: posición actual del ratón (relativa al desplazamiento del mapa)
+        // Coordenadas objetivo: posición actual del ratón (relativa al desplazamiento del mapa)
         double objetivoX = posicionRaton.x;
         double objetivoY = posicionRaton.y;
-
 
         // Llamar al gestor de balas para disparar
         gestorBalas.disparar(xInicial, yInicial, objetivoX, objetivoY);
     }
+
 
 
     //---------------------------------------------------
@@ -191,7 +202,6 @@ public class Movimiento extends JPanel implements ActionListener {
      * Sincroniza el desplazamiento del mapa con las colisiones y gestiona las balas.
      */
     public void moverJugador() {
-
         // Verificar colisiones en las cuatro direcciones
         boolean[] colisionesDirecciones = verificarColisiones();
 
@@ -205,17 +215,14 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
 
-
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
 
-
-        // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
         // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
         Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
         Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
 
-// 🔹 Verificar si el jugador está dentro de una de las casas
+        // 🔹 Verificar si el jugador está dentro de una de las casas
         int personajeX = personaje.getX();
         int personajeY = personaje.getY();
 
@@ -225,7 +232,6 @@ public class Movimiento extends JPanel implements ActionListener {
             mostrarTejados = true; // 🔹 Vuelve a mostrarlos
         }
 
-
         // 🔹 Verificar si el jugador ha llegado a la caja fuerte
         if (personajeRealX >= 2713 && personajeRealX <= 2715 && personajeRealY >= 3809 && personajeRealY <= 3857) {
             if (!mostrarMensajeMinijuego) {
@@ -234,6 +240,49 @@ public class Movimiento extends JPanel implements ActionListener {
             }
         } else {
             mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje si se aleja
+        }
+
+        // 🔹 Definir el área donde debe sonar la alarma (zona restringida)
+        Rectangle zonaAlarma = new Rectangle(2499, 1854, 1301, 2588); // Ancho = 3800 - 2499, Alto = 4444 - 1854
+
+// 🔹 Variables de control
+
+        if (zonaAlarma.contains(personajeRealX, personajeRealY)) {
+            if (!alarmaActivada) { // Solo se activa si no ha sonado antes
+                System.out.println("🚨 Alarma activada: ¡Intruso detectado!");
+                gestorSonidos.reproducirEfecto("/audio/NoirAreaAlarm.wav");
+                alarmaActivada = true; // 🔹 Ahora sí se mantiene activada
+            }
+        } else {
+            alarmaActivada = false; // 🔹 Resetea la alarma solo cuando el jugador salga completamente de la zona
+        }
+
+
+
+        // 🔹 SONIDOS: Pasos y carrera
+        if (movimiento[0] != 0 || movimiento[1] != 0) { // Si el personaje se está moviendo
+            if (space) { // Si está corriendo (usando "ESPACIO")
+                if (!estaCorriendo) {
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav"); // Asegurar que el sonido de pasos se detenga
+                    gestorSonidos.reproducirBucle("/audio/NoirRun.wav");
+                    estaCorriendo = true;
+                    estaCaminando = false;
+                }
+            } else { // Si solo está caminando
+                if (!estaCaminando) {
+                    gestorSonidos.detenerSonido("/audio/NoirRun.wav"); // Asegurar que el sonido de correr se detenga
+                    gestorSonidos.reproducirBucle("/audio/NoirStep3b.wav");
+                    estaCaminando = true;
+                    estaCorriendo = false;
+                }
+            }
+        } else { // Si se detiene
+            if (estaCaminando || estaCorriendo) { // Solo detener si realmente estaba caminando o corriendo
+                gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+                gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                estaCaminando = false;
+                estaCorriendo = false;
+            }
         }
 
 
@@ -248,10 +297,10 @@ public class Movimiento extends JPanel implements ActionListener {
             gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         }
 
-
         // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
     }
+
 
 
     /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */

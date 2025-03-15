@@ -1,6 +1,7 @@
 package juegoprog.graficos;
 
 import juegoprog.audio.GestorMusica;
+import juegoprog.audio.GestorSonidos;
 import juegoprog.cinematica.Cinematica;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
@@ -30,6 +31,8 @@ public class Pantalla extends JFrame {
     private long lastTime = System.nanoTime(); // Última medición de tiempo
 
     private final GestorMusica gestorMusica;
+    private GestorSonidos gestorSonidos;
+
     private Image tejados;
 
 
@@ -94,7 +97,10 @@ public class Pantalla extends JFrame {
         // 🔹 Cargar la imagen de los tejados
         tejados = new ImageIcon(Objects.requireNonNull(getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))).getImage();
 
+        // 🔹 Inicializar gestor de música y sonido
         gestorMusica = new GestorMusica();
+        gestorSonidos = new GestorSonidos(); // 🔹 Ahora gestorSonidos ya no será null
+
 
 
         // 🔹 La cinemática solo se agrega cuando se llame a cambiarPantalla("CINEMATICA")
@@ -205,6 +211,11 @@ public class Pantalla extends JFrame {
     public Image getTejados() {
         return tejados;
     }
+
+    public GestorSonidos getGestorSonidos() {
+        return gestorSonidos;
+    }
+
 
 
 }

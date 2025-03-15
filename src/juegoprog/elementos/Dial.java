@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Random;
 import javax.imageio.ImageIO;
 
 public class Dial extends JPanel {
@@ -41,23 +42,42 @@ public class Dial extends JPanel {
         });
 
         addKeyListener(new KeyAdapter() {
+            private long ultimaReproduccionSonido = 0; // 🔹 Guarda la última vez que sonó un efecto de la caja
+            private final long delaySonidoCaja = 150; // 🔹 Intervalo mínimo en milisegundos entre sonidos
+
             @Override
             public void keyPressed(KeyEvent e) {
                 if (!desbloqueado) {
+                    long tiempoActual = System.currentTimeMillis(); // 🔹 Obtener tiempo actual
+
                     if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        angulo += 5; // 🔹 AHORA la derecha aumenta en sentido horario
+                        angulo += 5;
+
+                        // 🔹 Solo reproducir sonido si ha pasado el delay
+                        if (tiempoActual - ultimaReproduccionSonido > delaySonidoCaja) {
+                            String sonidoDerecha = new Random().nextBoolean() ? "/audio/NoirOpenSafeDer.wav" : "/audio/NoirOpenSafeDer2.wav";
+                            ventana.getGestorSonidos().reproducirEfecto(sonidoDerecha);
+                            ultimaReproduccionSonido = tiempoActual; // 🔹 Actualizar el último sonido reproducido
+                        }
+
                     } else if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        angulo -= 5; // 🔹 AHORA la izquierda disminuye en sentido antihorario
+                        angulo -= 5;
+
+                        // 🔹 Solo reproducir sonido si ha pasado el delay
+                        if (tiempoActual - ultimaReproduccionSonido > delaySonidoCaja) {
+                            String sonidoIzquierda = new Random().nextBoolean() ? "/audio/NoirOpenSafeIZ.wav" : "/audio/NoirOpenSafeIZ2.wav";
+                            ventana.getGestorSonidos().reproducirEfecto(sonidoIzquierda);
+                            ultimaReproduccionSonido = tiempoActual; // 🔹 Actualizar el último sonido reproducido
+                        }
+
                     } else if (e.getKeyCode() == KeyEvent.VK_ENTER || e.getKeyCode() == KeyEvent.VK_SPACE) {
                         ultimoNumero = ajustarAngulo(angulo);
                         comprobarCombinacion();
                     } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                         System.out.println("🔹 Saliendo del minijuego...");
-                        ventana.getMovimiento().setEnMinijuego(false); // 🔹 Resetea enMinijuego SIEMPRE
+                        ventana.getMovimiento().setEnMinijuego(false);
                         ventana.cambiarPantalla("JUEGO");
                     }
-
-
 
                     if (angulo < 0) angulo += 360;
                     if (angulo >= 360) angulo -= 360;
@@ -65,6 +85,8 @@ public class Dial extends JPanel {
                     repaint();
                 }
             }
+
+
         });
     }
 
@@ -85,6 +107,10 @@ public class Dial extends JPanel {
 
             if (pasoActual >= combinacion.length) {
                 desbloqueado = true;
+
+                // 🔹 Reproducir sonido de apertura de caja fuerte
+                ventana.getGestorSonidos().reproducirEfecto("/audio/NoirOpenSafeF.wav");
+
 
                 // 🔹 Mostrar mensaje narrativo
                 JOptionPane.showMessageDialog(

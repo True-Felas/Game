@@ -1,5 +1,6 @@
 package juegoprog.elementos;
 
+import juegoprog.audio.GestorSonidos;
 import juegoprog.escenarios.ColisionesPanel;
 
 import javax.swing.*;
@@ -27,13 +28,17 @@ public class Enemigo {
     // Ángulo de rotación para que el enemigo mire hacia donde se mueve
     private double anguloRotacion = 0;
 
+    private final GestorSonidos gestorSonidos;
+
+
     /**
      * Constructor del enemigo.
      *
      * @param xInicial Posición inicial X del enemigo.
      * @param yInicial Posición inicial Y del enemigo.
      */
-    public Enemigo(double xInicial, double yInicial) {
+    public Enemigo(GestorSonidos gestorSonidos, double xInicial, double yInicial) {
+        this.gestorSonidos = gestorSonidos;
         this.x = xInicial;
         this.y = yInicial;
         calcularDestinoAleatorio(); // Calcula un primer destino aleatorio inicial
@@ -69,12 +74,46 @@ public class Enemigo {
     /**
      * Mueve al enemigo en dirección al jugador.
      */
+    private boolean yaEmitioAlerta = false; // 🔹 Evita que el enemigo grite más de una vez
+    private boolean estabaPersiguiendo = false; // 🔹 Detecta si el enemigo acaba de cambiar de estado
+    private int delayAlerta = new Random().nextInt(200) + 100; // 🔹 Retraso aleatorio mayor (100 a 300 ciclos)
+
+    // 🔹 Variable estática para evitar que muchos enemigos griten seguidos
+    private static long ultimoGrito = 0;
+
     private void perseguirJugador(double objetivoXJugador, double objetivoYJugador, ColisionesPanel colisiones,
                                   int desplazamientoX, int desplazamientoY) {
         // Movimiento hacia el jugador
         double velocidadPersecucion = 4;
         moverHaciaDestino(objetivoXJugador, objetivoYJugador, velocidadPersecucion, colisiones, desplazamientoX, desplazamientoY);
+
+        // 🔹 Solo hacer sonido si:
+        // - Nunca ha gritado antes (`yaEmitioAlerta == false`)
+        // - Ha pasado un retraso aleatorio (`delayAlerta == 0`)
+        // - Hay una probabilidad MUY baja (2% → `nextInt(50) == 0`)
+        // - Ha pasado suficiente tiempo desde el último grito global (`System.currentTimeMillis() - ultimoGrito > 5000`)
+        if (!yaEmitioAlerta && --delayAlerta <= 0
+                && new Random().nextInt(50) == 0
+                && System.currentTimeMillis() - ultimoGrito > 5000) {
+
+            // 🔹 Seleccionar aleatoriamente entre dos sonidos
+            String sonidoAlerta = new Random().nextBoolean() ? "/audio/NoirAlertA.wav" : "/audio/NoirAlertB.wav";
+            gestorSonidos.reproducirEfecto(sonidoAlerta);
+
+            // 🔹 Marcar este enemigo como ya alertado y actualizar el último grito global
+            yaEmitioAlerta = true;
+            ultimoGrito = System.currentTimeMillis();
+        }
+
+        // 🔹 Marcar que el enemigo ya está persiguiendo
+        estabaPersiguiendo = true;
     }
+
+
+
+
+
+
 
     /**
      * Realiza un movimiento aleatorio por el mapa.
