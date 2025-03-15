@@ -23,7 +23,6 @@ public class Cinematica extends JPanel implements ActionListener {
 
     /** Constructor de la Cinemática
      * "ventana" JFrame principal donde se ejecuta la animación */
-
     public Cinematica(Pantalla ventana) {
         this.ventana = ventana;
         setOpaque(true);
@@ -52,7 +51,6 @@ public class Cinematica extends JPanel implements ActionListener {
     }
 
     /** Cargamos las imágenes de la cinemática desde "resources". */
-
     private void cargarImagenes() {
         String[] archivos = {"/cinematicas/imagen1.jpg", "/cinematicas/imagen2.jpg", "/cinematicas/imagen3.jpg"};
         for (String archivo : archivos) {
@@ -67,17 +65,18 @@ public class Cinematica extends JPanel implements ActionListener {
     }
 
     /** Cambia a la siguiente imagen o finaliza la cinemática. */
-
     private void siguienteImagen() {
         if (++indiceActual >= imagenes.size()) terminarCinematica();
         else alpha = 0f; // Reinicia el efecto de fade-in
     }
 
     /** Finaliza la cinemática y carga el juego. */
-
     private void terminarCinematica() {
         timer.stop();
         cambioImagenTimer.stop();
+
+        // 🔹 Reanudamos la lógica normal del juego al acabar la cinemática
+        ventana.setEnCinematica(false);
 
         ventana.cambiarPantalla("JUEGO");
         SwingUtilities.invokeLater(() -> ventana.getMovimiento().requestFocusInWindow());
@@ -92,7 +91,6 @@ public class Cinematica extends JPanel implements ActionListener {
     }
 
     /** Renderiza la imagen actual con efectos de fade-in y zoom. */
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -103,7 +101,8 @@ public class Cinematica extends JPanel implements ActionListener {
             int imgHeight = imagenes.get(indiceActual).getHeight(this);
             int drawX = (getWidth() - (int) (imgWidth * escala)) / 2;
             int drawY = (getHeight() - (int) (imgHeight * escala)) / 2;
-            g2d.drawImage(imagenes.get(indiceActual), drawX, drawY, (int) (imgWidth * escala), (int) (imgHeight * escala), this);
+            g2d.drawImage(imagenes.get(indiceActual), drawX, drawY,
+                    (int) (imgWidth * escala), (int) (imgHeight * escala), this);
         }
     }
 }

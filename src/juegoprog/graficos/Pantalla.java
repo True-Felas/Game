@@ -3,160 +3,197 @@ package juegoprog.graficos;
 import juegoprog.audio.GestorMusica;
 import juegoprog.audio.GestorSonidos;
 import juegoprog.cinematica.Cinematica;
+import juegoprog.cinematica.GestorPistas;
 import juegoprog.elementos.GestorEnemigos;
-import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.jugador.Personaje;
 import juegoprog.sistema.MenuPrincipal;
 import juegoprog.controles.Movimiento;
-
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
 
-/** Clase principal para gestionar la pantalla principal y las distintas vistas (Menú y Juego).
- * También implementa el bucle principal para la lógica y el renderizado del juego. */
+/**
+ * Clase principal para gestionar la ventana del juego, con distintas 'pantallas' (Menu, Juego, Minijuegos, etc.).
+ * Además, contiene el bucle principal (FPS) para actualizar la lógica y renderizar.
+ */
 public class Pantalla extends JFrame {
 
-    //---------------------------------------------------
-    // 🔹 ATRIBUTOS PRINCIPALES
-    //---------------------------------------------------
+    // =========================================================================
+    // 1. ATRIBUTOS PRINCIPALES (CardLayout, Movimiento, música, etc.)
+    // =========================================================================
 
-    private final CardLayout cardLayout;
-    private final JPanel contenedorPrincipal;
-    private final Movimiento movimiento;
+    private final CardLayout cardLayout;         // Permite cambiar entre pantallas
+    private final JPanel contenedorPrincipal;    // Panel que contiene las distintas pantallas
 
-    private int frameCount = 0; // Contador de frames
-    private long lastTime = System.nanoTime(); // Última medición de tiempo
+    private final Movimiento movimiento;         // Control principal de movimiento y lógica del personaje
 
-    private final GestorMusica gestorMusica;
-    private GestorSonidos gestorSonidos;
+    private int frameCount = 0;                  // Contador de frames para calcular FPS
+    private long lastTime = System.nanoTime();   // Ayuda en el cálculo de FPS
 
-    private Image tejados;
+    private final GestorMusica gestorMusica;     // Gestor de música de fondo
+    private GestorSonidos gestorSonidos;         // Gestor de efectos de sonido
 
+    private Image tejados;                       // Imagen de los tejados del escenario
+    private GestorPistas gestorPistas;           // Gestiona pistas (investigación / recolección)
 
-    //---------------------------------------------------
-    // 🔹 CONSTRUCTOR Y CONFIGURACIÓN INICIAL
-    //---------------------------------------------------
+    // =========================================================================
+    // 2. CONSTRUCTOR Y CONFIGURACIÓN INICIAL
+    // =========================================================================
 
-    /** Configura la ventana del juego, las pantallas
-     * y las capas de la interfaz. */
-
+    /**
+     * Configura la ventana principal (JFrame):
+     * - Añade el Menú.
+     * - Crea el Escenario, Colisiones y Movimiento.
+     * - Registra pantallas como el Minijuego.
+     * - Inicia el bucle principal de actualización (FPS).
+     */
     public Pantalla() {
-        // Configuración de ventana principal
+
+        // ---------------------------------------------------------------------
+        // 2.1 Ajustes de la ventana
+        // ---------------------------------------------------------------------
         setTitle("Juego - Pantalla Principal");
         setSize(1280, 720);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
 
-        // 🔹 Configuración de CardLayout para gestionar pantallas
+        // ---------------------------------------------------------------------
+        // 2.2 Inicialización de componentes y contenedor principal (CardLayout)
+        // ---------------------------------------------------------------------
         cardLayout = new CardLayout();
         contenedorPrincipal = new JPanel(cardLayout);
         setContentPane(contenedorPrincipal);
 
-        // 🔹 Menú principal
+        // Creamos de una vez el gestor de pistas (ligado a esta ventana)
+        gestorPistas = new GestorPistas(this);
+
+        // ---------------------------------------------------------------------
+        // 2.3 Agregar la pantalla del Menú principal
+        // ---------------------------------------------------------------------
         contenedorPrincipal.add(new MenuPrincipal(this), "MENU");
 
-        // 🔹 Configuración de la pantalla de juego con capas
+        // ---------------------------------------------------------------------
+        // 2.4 Configuración de la pantalla de juego (JLayeredPane con varias capas)
+        // ---------------------------------------------------------------------
         JLayeredPane capaJuego = new JLayeredPane();
         capaJuego.setPreferredSize(new Dimension(1280, 720));
 
-        // 🔹 Fondo del escenario
+        // Fondo del escenario (mapa)
         EscenarioDistritoSombrio escenario = new EscenarioDistritoSombrio();
-        escenario.setBounds(0, 0, 4472, 4816); // Coordenadas para el fondo del mapa completo
+        escenario.setBounds(0, 0, 4472, 4816);
         capaJuego.add(escenario, JLayeredPane.DEFAULT_LAYER);
 
-        // 🔹 PNG de colisiones (capa oculta para detectar colisiones en el mapa)
+        // Capa de colisiones (invisible, se usa para detectar choques con paredes/obstáculos)
         ColisionesPanel colisiones = new ColisionesPanel();
         colisiones.setBounds(0, 0, 4472, 4816);
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
-        // 🔹 Crear el objeto Personaje para pasarlo al controlador Movimiento
-        // 🔹 Nuevos atributos (modificación para enemigos)
         // Personaje principal
         Personaje personaje = new Personaje();
 
-        // 🔹 Configuración del Control de Movimiento (Personaje, Enemigos y Balas)
-        movimiento = new Movimiento(this, escenario, colisiones, personaje); // 🔹 Se agrega 'this' para pasar la referencia de Pantalla
-        movimiento.setBounds(0, 0, 1280, 720); // Tamaño de la "vista" de la pantalla
+        // Control de movimiento (manejador de la lógica principal del juego)
+        movimiento = new Movimiento(this, escenario, colisiones, personaje);
+        movimiento.setBounds(0, 0, 1280, 720);
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
-        // 🔹 Minimapa para mostrar la posición del jugador y el mapa entero
+        // Minimapa
         Minimapa minimapa = new Minimapa(personaje, 4472, 4816);
-        minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236); // Coloca el minimapa en una esquina.
-        capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Capas superiores.
+        minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236);
+        capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Se coloca por encima de las capas base
 
-        // 🔹 Agregar la pantalla de juego al contenedor de pantallas
+        // Agregar esta "pantalla de juego" al CardLayout
         contenedorPrincipal.add(capaJuego, "JUEGO");
 
-        // 🔹 Registrar el minijuego de la caja fuerte en el CardLayout
+        // ---------------------------------------------------------------------
+        // 2.5 Registrar el minijuego de la caja fuerte en el CardLayout
+        // ---------------------------------------------------------------------
         contenedorPrincipal.add(new juegoprog.elementos.Dial(this), "MINIJUEGO_CAJA_FUERTE");
 
-        // 🔹 Cargar la imagen de los tejados
-        tejados = new ImageIcon(Objects.requireNonNull(getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))).getImage();
+        // ---------------------------------------------------------------------
+        // 2.6 Cargar la imagen de tejados y el gestor de música/sonidos
+        // ---------------------------------------------------------------------
+        tejados = new ImageIcon(Objects.requireNonNull(
+                getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))
+        ).getImage();
 
-        // 🔹 Inicializar gestor de música y sonido
         gestorMusica = new GestorMusica();
-        gestorSonidos = new GestorSonidos(); // 🔹 Ahora gestorSonidos ya no será null
+        gestorSonidos = new GestorSonidos(); // Inicializamos aquí para evitar null
 
-
-
-        // 🔹 La cinemática solo se agrega cuando se llame a cambiarPantalla("CINEMATICA")
-
+        // ---------------------------------------------------------------------
+        // 2.7 Iniciar el bucle principal del juego
+        // ---------------------------------------------------------------------
         iniciarBucle();
 
-        // Hacer visible la ventana principal
+        // ---------------------------------------------------------------------
+        // 2.8 Hacer visible la ventana
+        // ---------------------------------------------------------------------
         setVisible(true);
     }
 
-    //---------------------------------------------------
-    // 🔹 CAMBIO ENTRE PANTALLAS
-    //---------------------------------------------------
+    // =========================================================================
+    // 3. CAMBIO ENTRE PANTALLAS
+    // =========================================================================
 
-    /** Cambia entre pantallas (Menú o Juego) dentro del CardLayout.
-     *  ("MENU", "CINEMATICA" o "JUEGO"). */
-
+    /**
+     * Cambia entre pantallas (por ejemplo, "MENU", "CINEMATICA", "JUEGO", "MINIJUEGO_CAJA_FUERTE", etc.).
+     */
     public void cambiarPantalla(String pantalla) {
         if (pantalla.equals("CINEMATICA")) {
-            if (gestorMusica != null) gestorMusica.fadeOutMusica(2000); // 🔹 Fade-out de 2 segundos
+            // Si venimos de jugar con música, realizamos fade-out
+            if (gestorMusica != null) {
+                gestorMusica.fadeOutMusica(2000); // 2 segundos
+            }
+            // 🔹 Activamos la bandera 'enCinematica' para pausar la lógica del juego
+            setEnCinematica(true);
+
+            // Agregamos la cinemática como pantalla y luego mostramos
             contenedorPrincipal.add(new Cinematica(this), "CINEMATICA");
         }
 
         cardLayout.show(contenedorPrincipal, pantalla);
 
+        // Regresar al juego (por ejemplo, tras un minijuego)
         if (pantalla.equals("JUEGO")) {
-            movimiento.setEnMinijuego(false); // 🔹 Permite volver a entrar después de salir
-        }
-
-
-        if ("JUEGO".equals(pantalla)) {
+            movimiento.setEnMinijuego(false);
+            // Solicitamos el foco para capturar eventos de teclado en la clase Movimiento
             SwingUtilities.invokeLater(movimiento::requestFocusInWindow);
         }
     }
 
-    //---------------------------------------------------
-    // 🔹 BUCLE PRINCIPAL
-    //---------------------------------------------------
+    // =========================================================================
+    // 4. BUCLE PRINCIPAL (LOOP DE JUEGO)
+    // =========================================================================
 
-    /** Inicia el bucle principal para la lógica y renderización del juego. */
-
+    /**
+     * Inicia el bucle principal en un hilo separado:
+     * - Se repite continuamente: actualizar() + repaint().
+     * - Usa una tasa fija de 60 FPS.
+     */
     private void iniciarBucle() {
         new Thread(() -> {
-            final int fps = 60; // Frames por segundo deseados
-            final long frameTime = 1_000_000_000L / fps; // Tiempo de cada frame en nanosegundos
+            final int fps = 60;
+            final long frameTime = 1_000_000_000L / fps; // nanos
 
             while (true) {
                 long startTime = System.nanoTime();
+
+                // Actualiza la lógica del juego
                 actualizar();
+
+                // Llama al paint(...) de la ventana
                 repaint();
+
+                // Calcula cuánto tardó en este frame
                 long elapsedTime = System.nanoTime() - startTime;
                 long sleepTime = frameTime - elapsedTime;
 
                 if (sleepTime > 0) {
                     try {
-                        Thread.sleep(sleepTime / 1_000_000L); // Convertir a milisegundos
+                        Thread.sleep(sleepTime / 1_000_000L); // nanos a ms
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -165,23 +202,31 @@ public class Pantalla extends JFrame {
         }).start();
     }
 
-    //---------------------------------------------------
-    // 🔹 ACTUALIZACIÓN DE LÓGICA EN EL BUCLE
-    //---------------------------------------------------
+    // =========================================================================
+    // 5. ACTUALIZACIÓN DE LÓGICA POR FRAME
+    // =========================================================================
 
-    /** Actualiza cualquier lógica del juego que necesite cambiar entre frames. */
-
+    /**
+     * Se llama en cada frame:
+     *  - Actualiza el movimiento del personaje (si no estamos en cinemática).
+     *  - Calcula y actualiza los FPS.
+     */
     private void actualizar() {
-        movimiento.moverJugador();
+        // 🔹 Solo mover al jugador si NO estamos en cinemática
+        if (!enCinematica) {
+            movimiento.moverJugador();
+        }
+
         calcularYActualizarFPS();
     }
 
-    //---------------------------------------------------
-    // 🔹 CÁLCULO Y ACTUALIZACIÓN DE FPS
-    //---------------------------------------------------
+    // =========================================================================
+    // 6. CÁLCULO Y MOSTRADO DE FPS EN LA VENTANA
+    // =========================================================================
 
     /**
-     * Calcula los FPS y actualiza el título de la ventana.
+     * Calcula los fotogramas por segundo (FPS) y los muestra en el título de la ventana.
+     * Se hace cada vez que pasa 1 segundo (1_000_000_000 ns).
      */
     private void calcularYActualizarFPS() {
         frameCount++;
@@ -192,13 +237,34 @@ public class Pantalla extends JFrame {
             frameCount = 0;
             lastTime = currentTime;
 
-            SwingUtilities.invokeLater(() -> setTitle("Juego - FPS: " + String.format("%.2f", fps)));
+            SwingUtilities.invokeLater(() ->
+                    setTitle("Juego - FPS: " + String.format("%.2f", fps))
+            );
         }
     }
 
-    //---------------------------------------------------
-    // 🔹 MÉTODOS GETTERS
-    //---------------------------------------------------
+    // =========================================================================
+    // 7. GETTERS / SETTERS Y UTILIDADES
+    // =========================================================================
+
+    /**
+     * Indica si la cinemática está en curso (true). Si es true,
+     * se pausa la lógica del juego en el método actualizar().
+     */
+    private boolean enCinematica = false;
+
+    /** Activa o desactiva la bandera 'enCinematica'. */
+    public void setEnCinematica(boolean valor) {
+        this.enCinematica = valor;
+    }
+
+    /**
+     * @return true si el juego está en cinemática,
+     *         false si está en gameplay normal.
+     */
+    public boolean isEnCinematica() {
+        return enCinematica;
+    }
 
     public Movimiento getMovimiento() {
         return movimiento;
@@ -216,6 +282,17 @@ public class Pantalla extends JFrame {
         return gestorSonidos;
     }
 
+    public GestorPistas getGestorPistas() {
+        return gestorPistas;
+    }
 
+    /** Método 'placeholder' si se necesita en otros componentes */
+    public void mostrarImagenPista(String[] imagenes, Object o) {
+        // Actualmente sin implementación
+    }
 
+    /** Agrega un evento que se disparará cuando se presione ENTER. */
+    public void setEventoEnter(Runnable accion) {
+        movimiento.agregarEventoEnter(accion);
+    }
 }
