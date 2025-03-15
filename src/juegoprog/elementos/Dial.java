@@ -24,7 +24,7 @@ public class Dial extends JPanel {
 
     /** Arreglo con la secuencia (en grados) que compone la combinación correcta.
      * Cada valor debe coincidir exactamente para avanzar de paso. */
-    private final int[] combinacion = {76, 35, 14};
+    private final int[] combinacion = {75, 35, 10};
 
     /** Índice del paso de la combinación que se está intentando resolver.
      * Si acierta un valor de 'combinacion', se incrementa. Al completarse,
