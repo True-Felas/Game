@@ -35,7 +35,7 @@ public class Cinematica extends JPanel implements ActionListener {
         cargarImagenes();
 
         // 🔹 Reproducir música usando GestorMusica
-        ventana.getGestorMusica().reproducirMusica("/resources/audio/Find Me Again_DS.wav");
+        ventana.getGestorMusica().reproducirMusica("/resources/audio/Noir City - Find Me Again & Tension.wav");
 
         timer = new Timer(40, this);
         cambioImagenTimer = new Timer(20000, e -> siguienteImagen());

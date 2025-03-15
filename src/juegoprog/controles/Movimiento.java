@@ -34,6 +34,9 @@ public class Movimiento extends JPanel implements ActionListener {
     private final Point posicionRaton = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2); // 🔹 Posición del puntero
     private int desplazamientoX, desplazamientoY; // 🔹 Desplazamiento del escenario
 
+    /** TEJADOS (para ocultar y mostrar según la posición del jugador) */
+    private boolean mostrarTejados = true; // 🔹 Nuevo atributo para controlar la visibilidad de los tejados
+
     /** REFERENCIAS AL ESCENARIO Y COLISIONES */
     private final EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario
     private final ColisionesPanel colisiones; // 🔹 Referencia al panel de colisiones
@@ -151,10 +154,14 @@ public class Movimiento extends JPanel implements ActionListener {
     private void ajustarVelocidad() {
         if (space) {
             velocidad = 5; // Aumenta la velocidad cuando "ESPACIO" está presionado
+            personaje.setCorrer(true); // Cambia al GIF de correr
         } else {
             velocidad = 3; // Vuelve a la velocidad normal
+            personaje.setCorrer(false); // Cambia al GIF normal
         }
     }
+
+
 
     /**
      * Dispara una nueva bala hacia la posición del ratón.
@@ -201,6 +208,23 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
+
+
+        // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
+        // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
+        Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
+        Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
+
+// 🔹 Verificar si el jugador está dentro de una de las casas
+        int personajeX = personaje.getX();
+        int personajeY = personaje.getY();
+
+        if (casa1.contains(personajeX, personajeY) || casa2.contains(personajeX, personajeY)) {
+            mostrarTejados = false; // 🔹 Oculta los tejados
+        } else {
+            mostrarTejados = true; // 🔹 Vuelve a mostrarlos
+        }
+
 
         // 🔹 Verificar si el jugador ha llegado a la caja fuerte
         if (personajeRealX >= 2713 && personajeRealX <= 2715 && personajeRealY >= 3809 && personajeRealY <= 3857) {
@@ -293,7 +317,15 @@ public class Movimiento extends JPanel implements ActionListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g; // 🔹 NO BORRAR ESTA LÍNEA
 
-        // 🔹 Si el mensaje está activado, mostrarlo en la pantalla
+
+
+            // 🔹 Dibujar los tejados si están activos
+            if (mostrarTejados) {
+                g.drawImage(ventana.getTejados(), 0 - desplazamientoX, 0 - desplazamientoY, null);
+            }
+
+
+            // 🔹 Si el mensaje está activado, mostrarlo en la pantalla
         if (mostrarMensajeMinijuego) {
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 18));
@@ -302,6 +334,10 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Obtener la imagen del personaje
         Image imagenPersonaje = personaje.getImagen();
+        if (imagenPersonaje != null) {
+            g2d.drawImage(imagenPersonaje, -37, -35, this); // Centrado basado en 75x70
+        }
+
 
         // Dibujar la imagen del personaje en el centro de la pantalla con rotación
         g2d.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);

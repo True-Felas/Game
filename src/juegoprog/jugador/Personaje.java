@@ -4,39 +4,57 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
 
-
 public class Personaje extends JPanel {
-    private Image imagen; // La imagen del personaje
+    private ImageIcon gifNormal;  // GIF de caminar o estar quieto
+    private ImageIcon gifCorrer;  // GIF de correr
+    private ImageIcon gifActual;  // GIF actualmente usado
 
     // Posición actual del personaje
-    private int x = 50; // Coordenada X inicial
-    private int y = 50; // Coordenada Y inicial
+    private int x = 50;
+    private int y = 50;
 
     // Constructor
     public Personaje() {
-        cargarImagen("/personaje/personajep.png"); // Ruta de la imagen en resources
+        // Cargar GIFs
+        cargarGifNormal("/personaje/personaje_andando.gif"); // Ruta del GIF normal
+        cargarGifCorrer("/personaje/personaje_corriendo.gif"); // Ruta del GIF de correr
+
+        // Por defecto, usa el GIF normal
+        gifActual = gifNormal;
     }
 
     public Image getImagen() {
-        return imagen;
+        return gifActual.getImage();
     }
 
-    // Carga una imagen y le da tamaño
-    public void cargarImagen(String rutaImagen) {
+    public void cargarGifNormal(String ruta) {
         try {
-            ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(rutaImagen)));
-
-            // Tamaño del personaje
-            int alto = 60;
-            int ancho = 60;
-            this.imagen = icon.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
+            ImageIcon original = new ImageIcon(Objects.requireNonNull(getClass().getResource(ruta)));
+            gifNormal = new ImageIcon(original.getImage().getScaledInstance(75, 70, Image.SCALE_DEFAULT));
         } catch (Exception e) {
-            System.err.println("Error al cargar la imagen: " + rutaImagen);
-            this.imagen = null; // Revertir a imagen nula
+            System.err.println("Error al cargar el GIF normal: " + ruta);
         }
     }
 
-    // Métodos para acceder y modificar las coordenadas del personaje
+    public void cargarGifCorrer(String ruta) {
+        try {
+            ImageIcon original = new ImageIcon(Objects.requireNonNull(getClass().getResource(ruta)));
+            gifCorrer = new ImageIcon(original.getImage().getScaledInstance(75, 70, Image.SCALE_DEFAULT));
+        } catch (Exception e) {
+            System.err.println("Error al cargar el GIF de correr: " + ruta);
+        }
+    }
+
+    // Cambiar entre los GIFs
+    public void setCorrer(boolean corriendo) {
+        if (corriendo) {
+            gifActual = gifCorrer;  // Si está corriendo, usa el GIF de correr
+        } else {
+            gifActual = gifNormal;  // Si no, usa el GIF normal
+        }
+    }
+
+    // Métodos de posición
     public int getX() {
         return x;
     }
@@ -50,5 +68,3 @@ public class Personaje extends JPanel {
         this.y = y;
     }
 }
-
-
