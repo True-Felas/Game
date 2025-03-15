@@ -2,7 +2,6 @@ package juegoprog.sistema;
 
 import juegoprog.graficos.Pantalla;
 import juegoprog.audio.GestorMusica;
-import juegoprog.cinematica.Cinematica;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,13 +10,11 @@ import java.awt.event.ActionListener;
 import java.util.Objects;
 
 public class MenuPrincipal extends JPanel {
-    private Image fondo; // Imagen de fondo
+    private final Image fondo; // Imagen de fondo
     private final GestorMusica gestorMusica = new GestorMusica(); // Instancia de música
-    private JLabel titulo; // 🔹 Referencia al título para animarlo
-    private JFrame ventana;
+    private final JLabel titulo; // 🔹 Referencia al título para animarlo
 
     public MenuPrincipal(JFrame ventana) {
-        this.ventana = ventana;
 
         // Cargar la imagen de fondo desde resources
         fondo = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Fondo_Menu.png"))).getImage();
@@ -33,27 +30,14 @@ public class MenuPrincipal extends JPanel {
         titulo.setForeground(new Color(250, 240, 230));
         titulo.setBounds(300, 20, 700, 80);
         add(titulo);
-        animarTitulo(); // 🔹 Llamamos al método de animación
+        animarTitulo(); // 🔹 Llamamos al metodo de animación
 
         // Cargar imágenes para los botones
-        ImageIcon imgJugar = new ImageIcon(getClass().getResource("/resources/menu/Iniciar2.png"));
-        ImageIcon imgSalir = new ImageIcon(getClass().getResource("/resources/menu/Salir2.png"));
+        ImageIcon imgJugar = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Iniciar2.png")));
+        ImageIcon imgSalir = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Salir2.png")));
 
-        // Botón Iniciar Juego
-        JButton botonJugar = new JButton(imgJugar);
-        botonJugar.setBounds(500, 300, 300, 80);
-        botonJugar.setBorderPainted(false);
-        botonJugar.setContentAreaFilled(false);
-        botonJugar.setFocusPainted(false);
-        botonJugar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gestorMusica.fadeOutMusica(2000); // 🔹 Fade out en 2 segundos
-                Pantalla pantalla = (Pantalla) ventana;
-                pantalla.cambiarPantalla("CINEMATICA"); // Crea esta pantalla en Pantalla.java
 
-            }
-        });
+        JButton botonJugar = getJugar((Pantalla) ventana, imgJugar);
         add(botonJugar);
 
         // Botón Salir
@@ -62,13 +46,24 @@ public class MenuPrincipal extends JPanel {
         botonSalir.setBorderPainted(false);
         botonSalir.setContentAreaFilled(false);
         botonSalir.setFocusPainted(false);
-        botonSalir.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0); // Cierra el juego
-            }
+        botonSalir.addActionListener(_ -> {
+            System.exit(0); // Cierra el juego
         });
         add(botonSalir);
+    }
+
+    private JButton getJugar(Pantalla ventana, ImageIcon imgJugar) {
+        JButton botonJugar = new JButton(imgJugar);
+        botonJugar.setBounds(500, 300, 300, 80);
+        botonJugar.setBorderPainted(false);
+        botonJugar.setContentAreaFilled(false);
+        botonJugar.setFocusPainted(false);
+        botonJugar.addActionListener(_ -> {
+            gestorMusica.fadeOutMusica(2000); // 🔹 Fade out en 2 segundos
+            ventana.cambiarPantalla("CINEMATICA"); // Crea esta pantalla en Pantalla.java
+
+        });
+        return botonJugar;
     }
 
     // Sobrescribimos paintComponent para dibujar la imagen de fondo
@@ -78,7 +73,7 @@ public class MenuPrincipal extends JPanel {
         g.drawImage(fondo, 0, 0, getWidth(), getHeight(), this);
     }
 
-    // MÉTODO para animar el título con parpadeo suave
+    // METODO para animar el título con parpadeo suave
     private void animarTitulo() {
         Timer timer = new Timer(100, new ActionListener() {
             float alpha = 1.0f;

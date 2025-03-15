@@ -1,5 +1,6 @@
 package juegoprog.controles;
 
+import juegoprog.audio.GestorSonidos;
 import juegoprog.elementos.GestorBalas;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
@@ -32,7 +33,10 @@ public class Movimiento extends JPanel implements ActionListener {
 
     /** CONTROL DEL RATÓN Y DESPLAZAMIENTO DEL MAPA */
     private final Point posicionRaton = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2); // 🔹 Posición del puntero
-    private int desplazamientoX = 0, desplazamientoY = 0; // 🔹 Desplazamiento del escenario
+    private int desplazamientoX, desplazamientoY; // 🔹 Desplazamiento del escenario
+
+    /** TEJADOS (para ocultar y mostrar según la posición del jugador) */
+    private boolean mostrarTejados = true; // 🔹 Nuevo atributo para controlar la visibilidad de los tejados
 
     /** REFERENCIAS AL ESCENARIO Y COLISIONES */
     private final EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario
@@ -43,10 +47,16 @@ public class Movimiento extends JPanel implements ActionListener {
     private final GestorBalas gestorBalas = new GestorBalas(); // 🔹 Clase auxiliar para manejo de balas
 
     /** GESTIÓN DE ENEMIGOS */
-    private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
+    private GestorSonidos gestorSonidos = new GestorSonidos();
+    private final GestorEnemigos gestorEnemigos = new GestorEnemigos(gestorSonidos); // 🔹 Clase para manejar enemigos
 
     private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
-    private boolean enMinijuego = false; // 🔹 Para evitar múltiples activaciones
+    public boolean enMinijuego = false; // Controla si el jugador está en un minijuego
+    private boolean mostrarMensajeMinijuego = false; // 🔹 Controla si mostramos "Pulsa ENTER para acceder al minijuego"
+
+    private boolean estaCaminando = false;
+    private boolean estaCorriendo = false;
+    private boolean alarmaActivada = false; // 🔹 Ahora es un atributo global y no se resetea cada frame
 
 
     //---------------------------------------------------
@@ -84,6 +94,15 @@ public class Movimiento extends JPanel implements ActionListener {
             @Override
             public void keyPressed(KeyEvent e) {
                 toggleMovement(e.getKeyCode(), true);
+
+                // 🔹 Si el jugador está en la zona y pulsa ENTER, entra al minijuego
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && mostrarMensajeMinijuego) {
+                    System.out.println("📍 Accediendo al minijuego...");
+                    enMinijuego = true;
+                    mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje al entrar
+                    ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
+                }
+
             }
 
             @Override
@@ -142,30 +161,37 @@ public class Movimiento extends JPanel implements ActionListener {
     private void ajustarVelocidad() {
         if (space) {
             velocidad = 5; // Aumenta la velocidad cuando "ESPACIO" está presionado
+            personaje.setCorrer(true); // Cambia al GIF de correr
         } else {
             velocidad = 3; // Vuelve a la velocidad normal
+            personaje.setCorrer(false); // Cambia al GIF normal
         }
     }
+
+
 
     /**
      * Dispara una nueva bala hacia la posición del ratón.
      * La bala se inicia en el centro de la pantalla y se mueve hacia
      * la posición del ratón relativa a la ventana.
      */
+    /** Dispara una nueva bala hacia la posición del ratón. */
     private void dispararBala() {
+        // 🔹 Reproducir sonido de disparo
+        gestorSonidos.reproducirEfecto("/audio/NoirShotC.wav");
+
         // Coordenadas iniciales: el centro de la pantalla
         double xInicial = personaje.getX();
         double yInicial = personaje.getY();
 
-        // Coordenadas objetiv: posición actual del ratón (relativa al desplazamiento del mapa)
+        // Coordenadas objetivo: posición actual del ratón (relativa al desplazamiento del mapa)
         double objetivoX = posicionRaton.x;
         double objetivoY = posicionRaton.y;
 
-
         // Llamar al gestor de balas para disparar
         gestorBalas.disparar(xInicial, yInicial, objetivoX, objetivoY);
-        System.out.println(xInicial +", "+ yInicial);
     }
+
 
 
     //---------------------------------------------------
@@ -176,12 +202,8 @@ public class Movimiento extends JPanel implements ActionListener {
      * Sincroniza el desplazamiento del mapa con las colisiones y gestiona las balas.
      */
     public void moverJugador() {
-        // La posición "central" del jugador en la pantalla.
-        int personajeX = desplazamientoX + SCREEN_WIDTH / 2;
-        int personajeY = desplazamientoY + SCREEN_HEIGHT / 2;
-
         // Verificar colisiones en las cuatro direcciones
-        boolean[] colisionesDirecciones = verificarColisiones(personajeX, personajeY);
+        boolean[] colisionesDirecciones = verificarColisiones();
 
         // Calcular movimiento basado en las teclas y las colisiones
         double[] movimiento = calcularMovimiento(colisionesDirecciones);
@@ -193,20 +215,75 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
 
-        System.out.println("📍 Posición del jugador -> X: " + personajeRealX + " | Y: " + personajeRealY);
-
         // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
 
-        if (!enMinijuego && personajeRealX == 2714 && personajeRealY >= 3808 && personajeRealY <= 3856) {
-            System.out.println("📍 Accediendo al minijuego de la caja fuerte...");
-            enMinijuego = true; // 🔹 Evita múltiples activaciones
-            ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
+        // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
+        Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
+        Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
 
+        // 🔹 Verificar si el jugador está dentro de una de las casas
+        int personajeX = personaje.getX();
+        int personajeY = personaje.getY();
+
+        if (casa1.contains(personajeX, personajeY) || casa2.contains(personajeX, personajeY)) {
+            mostrarTejados = false; // 🔹 Oculta los tejados
+        } else {
+            mostrarTejados = true; // 🔹 Vuelve a mostrarlos
+        }
+
+        // 🔹 Verificar si el jugador ha llegado a la caja fuerte
+        if (personajeRealX >= 2713 && personajeRealX <= 2715 && personajeRealY >= 3809 && personajeRealY <= 3857) {
+            if (!mostrarMensajeMinijuego) {
+                System.out.println("📍 Pulsa ENTER para acceder al minijuego");
+                mostrarMensajeMinijuego = true; // 🔹 Activa el mensaje en pantalla
+            }
+        } else {
+            mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje si se aleja
+        }
+
+        // 🔹 Definir el área donde debe sonar la alarma (zona restringida)
+        Rectangle zonaAlarma = new Rectangle(2499, 1854, 1301, 2588); // Ancho = 3800 - 2499, Alto = 4444 - 1854
+
+// 🔹 Variables de control
+
+        if (zonaAlarma.contains(personajeRealX, personajeRealY)) {
+            if (!alarmaActivada) { // Solo se activa si no ha sonado antes
+                System.out.println("🚨 Alarma activada: ¡Intruso detectado!");
+                gestorSonidos.reproducirEfecto("/audio/NoirAreaAlarm.wav");
+                alarmaActivada = true; // 🔹 Ahora sí se mantiene activada
+            }
+        } else {
+            alarmaActivada = false; // 🔹 Resetea la alarma solo cuando el jugador salga completamente de la zona
         }
 
 
 
+        // 🔹 SONIDOS: Pasos y carrera
+        if (movimiento[0] != 0 || movimiento[1] != 0) { // Si el personaje se está moviendo
+            if (space) { // Si está corriendo (usando "ESPACIO")
+                if (!estaCorriendo) {
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav"); // Asegurar que el sonido de pasos se detenga
+                    gestorSonidos.reproducirBucle("/audio/NoirRun.wav");
+                    estaCorriendo = true;
+                    estaCaminando = false;
+                }
+            } else { // Si solo está caminando
+                if (!estaCaminando) {
+                    gestorSonidos.detenerSonido("/audio/NoirRun.wav"); // Asegurar que el sonido de correr se detenga
+                    gestorSonidos.reproducirBucle("/audio/NoirStep3b.wav");
+                    estaCaminando = true;
+                    estaCorriendo = false;
+                }
+            }
+        } else { // Si se detiene
+            if (estaCaminando || estaCorriendo) { // Solo detener si realmente estaba caminando o corriendo
+                gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+                gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                estaCaminando = false;
+                estaCorriendo = false;
+            }
+        }
 
 
 
@@ -216,30 +293,18 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // 🔹 Añadir lógica de oleadas de enemigos
         if (gestorEnemigos.enemigosEliminados()) {
-            // Determinar las dimensiones del escenario
-            int anchoEscenario = escenario.getAncho(); // Métodos para obtener dimensiones del escenario
-            int altoEscenario = escenario.getAlto();
-
-            // Posición del jugador
-            double posJugadorX = personaje.getX();
-            double posJugadorY = personaje.getY();
-
             // Generar nueva oleada
             gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         }
-
 
         // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
     }
 
-    public void setEnMinijuego(boolean estado) {
-        this.enMinijuego = estado;
-    }
 
 
     /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */
-    private boolean[] verificarColisiones(int personajeX, int personajeY) {
+    private boolean[] verificarColisiones() {
         int hitbox = 10;
 
         // Ajustamos las coordenadas globales basadas en el desplazamiento del mapa
@@ -299,10 +364,29 @@ public class Movimiento extends JPanel implements ActionListener {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2d = (Graphics2D) g; // 🔹 NO BORRAR ESTA LÍNEA
+
+
+
+            // 🔹 Dibujar los tejados si están activos
+            if (mostrarTejados) {
+                g.drawImage(ventana.getTejados(), 0 - desplazamientoX, 0 - desplazamientoY, null);
+            }
+
+
+            // 🔹 Si el mensaje está activado, mostrarlo en la pantalla
+        if (mostrarMensajeMinijuego) {
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 18));
+            g.drawString("Pulsa ENTER para abrir la caja fuerte", SCREEN_WIDTH / 2 - 150, 50);
+        }
 
         // Obtener la imagen del personaje
         Image imagenPersonaje = personaje.getImagen();
+        if (imagenPersonaje != null) {
+            g2d.drawImage(imagenPersonaje, -37, -35, this); // Centrado basado en 75x70
+        }
+
 
         // Dibujar la imagen del personaje en el centro de la pantalla con rotación
         g2d.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -325,9 +409,14 @@ public class Movimiento extends JPanel implements ActionListener {
 
 
     }
+    public void setEnMinijuego(boolean estado) {
+        this.enMinijuego = estado;
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
     }
+
+
 }

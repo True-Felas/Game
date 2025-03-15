@@ -1,21 +1,20 @@
 package juegoprog.elementos;
 
+import juegoprog.audio.GestorSonidos;
 import juegoprog.escenarios.ColisionesPanel;
 
+import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 import java.util.Random;
 
 public class Enemigo {
     private double x, y;             // Posición actual del enemigo
-    private final int tamano = 50;   // Tamaño del cuadrado que representa al enemigo
+    private final int tamano = 60;   // Tamaño del cuadrado que representa al enemigo
     private boolean activo = true;   // Indica si está activo (vivo) o eliminado
     private int vida = 3;            // Vida del enemigo
 
     private final Random random = new Random();
-
-    // Velocidades
-    private final double velocidadBase = 2;
-    private final double velocidadPersecucion = 4;
 
     // Movimiento aleatorio
     private double objetivoX;        // Destino X al que se moverá aleatoriamente
@@ -23,16 +22,29 @@ public class Enemigo {
     private int tiempoCambioDireccion = 0; // Contador que determina cuándo cambiar de destino aleatorio
     private int intentosMoverse = 0; // Recuento de intentos por moverse sin éxito (atascos)
 
+    // Imagen del enemigo
+    private final Image imagenEnemigo;
+
+    // Ángulo de rotación para que el enemigo mire hacia donde se mueve
+    private double anguloRotacion = 0;
+
+    private final GestorSonidos gestorSonidos;
+
+
     /**
      * Constructor del enemigo.
      *
      * @param xInicial Posición inicial X del enemigo.
      * @param yInicial Posición inicial Y del enemigo.
      */
-    public Enemigo(double xInicial, double yInicial, double velocidad) {
+    public Enemigo(GestorSonidos gestorSonidos, double xInicial, double yInicial) {
+        this.gestorSonidos = gestorSonidos;
         this.x = xInicial;
         this.y = yInicial;
         calcularDestinoAleatorio(); // Calcula un primer destino aleatorio inicial
+        // Cargar la imagen del enemigo desde la ruta especificada
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/personaje/enemigo_cuchillo.gif")));
+        this.imagenEnemigo = icon.getImage();
     }
 
     /**
@@ -50,7 +62,7 @@ public class Enemigo {
 
         double distanciaJugador = Math.hypot(objetivoXJugador - x, objetivoYJugador - y);
 
-        if (distanciaJugador < 200) {
+        if (distanciaJugador < 250) {
             // Si el jugador está cerca, perseguir
             perseguirJugador(objetivoXJugador, objetivoYJugador, colisiones, desplazamientoX, desplazamientoY);
         } else {
@@ -62,11 +74,46 @@ public class Enemigo {
     /**
      * Mueve al enemigo en dirección al jugador.
      */
+    private boolean yaEmitioAlerta = false; // 🔹 Evita que el enemigo grite más de una vez
+    private boolean estabaPersiguiendo = false; // 🔹 Detecta si el enemigo acaba de cambiar de estado
+    private int delayAlerta = new Random().nextInt(200) + 100; // 🔹 Retraso aleatorio mayor (100 a 300 ciclos)
+
+    // 🔹 Variable estática para evitar que muchos enemigos griten seguidos
+    private static long ultimoGrito = 0;
+
     private void perseguirJugador(double objetivoXJugador, double objetivoYJugador, ColisionesPanel colisiones,
                                   int desplazamientoX, int desplazamientoY) {
         // Movimiento hacia el jugador
+        double velocidadPersecucion = 4;
         moverHaciaDestino(objetivoXJugador, objetivoYJugador, velocidadPersecucion, colisiones, desplazamientoX, desplazamientoY);
+
+        // 🔹 Solo hacer sonido si:
+        // - Nunca ha gritado antes (`yaEmitioAlerta == false`)
+        // - Ha pasado un retraso aleatorio (`delayAlerta == 0`)
+        // - Hay una probabilidad MUY baja (2% → `nextInt(50) == 0`)
+        // - Ha pasado suficiente tiempo desde el último grito global (`System.currentTimeMillis() - ultimoGrito > 5000`)
+        if (!yaEmitioAlerta && --delayAlerta <= 0
+                && new Random().nextInt(50) == 0
+                && System.currentTimeMillis() - ultimoGrito > 5000) {
+
+            // 🔹 Seleccionar aleatoriamente entre dos sonidos
+            String sonidoAlerta = new Random().nextBoolean() ? "/audio/NoirAlertA.wav" : "/audio/NoirAlertB.wav";
+            gestorSonidos.reproducirEfecto(sonidoAlerta);
+
+            // 🔹 Marcar este enemigo como ya alertado y actualizar el último grito global
+            yaEmitioAlerta = true;
+            ultimoGrito = System.currentTimeMillis();
+        }
+
+        // 🔹 Marcar que el enemigo ya está persiguiendo
+        estabaPersiguiendo = true;
     }
+
+
+
+
+
+
 
     /**
      * Realiza un movimiento aleatorio por el mapa.
@@ -80,6 +127,8 @@ public class Enemigo {
         }
 
         // Intenta moverse hacia el destino actual
+        // Velocidades
+        double velocidadBase = 1;
         if (!moverHaciaDestino(objetivoX, objetivoY, velocidadBase, colisiones, desplazamientoX, desplazamientoY)) {
             intentosMoverse++; // Incrementa el contador si no logra avanzar
         }
@@ -114,6 +163,9 @@ public class Enemigo {
         double nuevoX = x + deltaX * factor;
         double nuevoY = y + deltaY * factor;
 
+        // Calcular el ángulo de rotación basado en la dirección del movimiento
+        anguloRotacion = Math.atan2(deltaY, deltaX);
+
         // Revisar colisiones
         if (!colisiones.hayColision((int) (nuevoX - desplazamientoX), (int) (nuevoY - desplazamientoY))) {
             // Aplicar movimiento si no hay colisión
@@ -147,7 +199,7 @@ public class Enemigo {
     }
 
     /**
-     * Dibuja al enemigo como un cuadrado rojo con la vida mostrada sobre él.
+     * Dibuja al enemigo con la rotación adecuada.
      */
     public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
         if (!activo) return;
@@ -155,9 +207,14 @@ public class Enemigo {
         int xVisible = (int) x - desplazamientoX;
         int yVisible = (int) y - desplazamientoY;
 
-        // Dibuja el cuadrado
-        g.setColor(Color.RED);
-        g.fillRect(xVisible - tamano / 2, yVisible - tamano / 2, tamano, tamano);
+        // Convertir Graphics a Graphics2D para usar transformaciones
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Aplicar la rotación al dibujar la imagen
+        g2d.translate(xVisible, yVisible);
+        g2d.rotate(anguloRotacion);
+        g2d.drawImage(imagenEnemigo, -tamano / 2, -tamano / 2, tamano, tamano, null);
+        g2d.dispose(); // Liberar recursos de Graphics2D
 
         // Dibuja la vida encima del enemigo
         g.setColor(Color.WHITE);
