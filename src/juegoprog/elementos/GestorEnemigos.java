@@ -1,5 +1,6 @@
 package juegoprog.elementos;
 
+import juegoprog.audio.GestorSonidos;
 import juegoprog.escenarios.ColisionesPanel;
 
 import java.awt.*;
@@ -47,7 +48,7 @@ public class GestorEnemigos {
         // Generar nuevos enemigos para alcanzar el máximo permitido
         while (enemigos.size() < MAX_ENEMIGOS) {
             int[] respawn = puntosRespawn[random.nextInt(puntosRespawn.length)]; // Elegir punto de respawn
-            Enemigo nuevoEnemigo = new Enemigo(respawn[0], respawn[1]); // Crear enemigo con velocidad base
+            Enemigo nuevoEnemigo = new Enemigo(gestorSonidos, respawn[0], respawn[1]); // 🔹 Ahora pasamos gestorSonidos
             enemigos.add(nuevoEnemigo);
         }
     }
@@ -61,20 +62,43 @@ public class GestorEnemigos {
         for (Enemigo enemigo : enemigos) {
             if (!enemigo.isActivo()) continue;
 
-            // Verificamos cada bala activa contra cada enemigo
             gestorBalas.getBalas().forEach(bala -> {
                 if (enemigo.colisionaCon(bala.getX(), bala.getY())) {
-                    enemigo.recibirDano(); // Reducir vida del enemigo
-                    bala.desactivar();    // Desactivar bala
+                    enemigo.recibirDano();
+                    bala.desactivar();
 
-                    // Si el enemigo muere, lo marcamos como inactivo
+                    // Si el enemigo muere, lo marcamos como inactivo y reproducimos un sonido aleatorio (o ninguno)
                     if (!enemigo.isActivo()) {
                         enemigo.desactivar();
+
+                        // 🔹 Generar un número aleatorio entre 0 y 4 (5 opciones: 4 sonidos y 1 silencio)
+                        int opcion = new Random().nextInt(5); // 0, 1, 2, 3 o 4
+
+                        String sonidoMuerte = switch (opcion) {
+                            case 0 -> "/audio/NoirDeathA.wav";
+                            case 1 -> "/audio/NoirDeathB.wav";
+                            case 2 -> "/audio/NoirDeathC.wav";
+                            case 3 -> "/audio/NoirDeathD.wav";
+                            default -> null; // 🔹 Caso 4: No reproducir sonido
+                        };
+
+                        // 🔹 Si no es null, reproducir sonido
+                        if (sonidoMuerte != null) {
+                            gestorSonidos.reproducirEfecto(sonidoMuerte);
+                        }
                     }
                 }
             });
         }
     }
+
+
+    private final GestorSonidos gestorSonidos;
+
+    public GestorEnemigos(GestorSonidos gestorSonidos) {
+        this.gestorSonidos = gestorSonidos;
+    }
+
 
     /**
      * Dibuja a todos los enemigos activos en el contexto gráfico.

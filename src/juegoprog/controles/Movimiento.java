@@ -1,5 +1,7 @@
 package juegoprog.controles;
 
+import juegoprog.audio.GestorSonidos;
+import juegoprog.cinematica.GestorPistas;
 import juegoprog.elementos.GestorBalas;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
@@ -11,91 +13,156 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-/**
- * Gestiona el movimiento del personaje y la cámara.
- * Maneja eventos de teclado y ratón para controlar desplazamiento, rotación y disparos de balas.
- * Basado en los apuntes de Soraya "Eventos y Escuchadores".
- */
+/** Esta clase gestiona el movimiento del personaje principal y, a la vez,
+ *   coordina la cámara y el desplazamiento del mapa.
+ * - Captura eventos de teclado y ratón para mover y rotar al personaje.
+ * - Dispara balas y gestiona colisiones.
+ * - Interactúa con enemigos y elementos del escenario (pistas, minijuegos, alarmas, tejados, etc.).  */
 public class Movimiento extends JPanel implements ActionListener {
 
-    //---------------------------------------------------
-    //  🔹 ATRIBUTOS PRINCIPALES
-    //---------------------------------------------------
+    // =========================================================================
+    // 1. CONSTANTES Y CONFIGURACIÓN GENERAL
+    // =========================================================================
 
-    /** CONSTANTES Y CONFIGURACIÓN */
-    private final int SCREEN_WIDTH = 1280, SCREEN_HEIGHT = 720; // 🔹 Tamaño de la pantalla
-    private int velocidad = 3; // 🔹 Velocidad de movimiento (puede variar)
+    private final int SCREEN_WIDTH = 1280;
+    private final int SCREEN_HEIGHT = 720;
+    private final int VELOCIDAD_CAMINAR = 3;  // Velocidad base
+    private final int VELOCIDAD_CORRER = 5;   // Velocidad al presionar SPACE
 
-    /** CONTROL DE MOVIMIENTO */
-    private boolean up, down, left, right, space; // 🔹 Control de teclas presionadas
-    private double anguloRotacion = 0; // 🔹 Ángulo de rotación basado en el puntero
+    // =========================================================================
+    // 2. ATRIBUTOS DE CONTROL DE MOVIMIENTO
+    // =========================================================================
 
-    /** CONTROL DEL RATÓN Y DESPLAZAMIENTO DEL MAPA */
-    private final Point posicionRaton = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2); // 🔹 Posición del puntero
-    private int desplazamientoX, desplazamientoY; // 🔹 Desplazamiento del escenario
+    // Teclas de movimiento
+    private boolean up, down, left, right, space;
 
-    /** TEJADOS (para ocultar y mostrar según la posición del jugador) */
-    private boolean mostrarTejados = true; // 🔹 Nuevo atributo para controlar la visibilidad de los tejados
+    // Velocidad dinámica (depende de si está corriendo o no)
+    private int velocidad = VELOCIDAD_CAMINAR;
 
-    /** REFERENCIAS AL ESCENARIO Y COLISIONES */
-    private final EscenarioDistritoSombrio escenario; // 🔹 Referencia al escenario
-    private final ColisionesPanel colisiones; // 🔹 Referencia al panel de colisiones
-    private final Personaje personaje; // 🔹 Personaje que se moverá en pantalla
+    // Se usa para rotar el personaje según el cursor
+    private double anguloRotacion = 0;
 
-    /** GESTIÓN DE BALAS */
-    private final GestorBalas gestorBalas = new GestorBalas(); // 🔹 Clase auxiliar para manejo de balas
+    // =========================================================================
+    // 3. ATRIBUTOS DE RATÓN Y DESPLAZAMIENTO DE MAPA
+    // =========================================================================
 
-    /** GESTIÓN DE ENEMIGOS */
-    private final GestorEnemigos gestorEnemigos = new GestorEnemigos(); // 🔹 Clase para manejar enemigos
+    // Posición absoluta del ratón (sumando desplazamientoX / desplazamientoY)
+    private final Point posicionRaton = new Point(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 
-    private final Pantalla ventana; // 🔹 Agregamos una referencia a la pantalla
-    public boolean enMinijuego = false; // Controla si el jugador está en un minijuego
-    private boolean mostrarMensajeMinijuego = false; // 🔹 Controla si mostramos "Pulsa ENTER para acceder al minijuego"
+    // Controla el offset del escenario (cámara)
+    private int desplazamientoX;
+    private int desplazamientoY;
 
-    //---------------------------------------------------
-    //  🔹 CONSTRUCTOR Y CONFIGURACIÓN DE EVENTOS
-    //---------------------------------------------------
+    // =========================================================================
+    // 4. CONTROL DE ELEMENTOS GRÁFICOS (TEJADOS, ETC.)
+    // =========================================================================
+
+    // Por defecto, los tejados se muestran
+    private boolean mostrarTejados = true;
+
+    // =========================================================================
+    // 5. REFERENCIAS A OTRAS CLASES (ESCENARIO, COLISIONES, JUGADOR, ETC.)
+    // =========================================================================
+
+    private final EscenarioDistritoSombrio escenario;
+    private final ColisionesPanel colisiones;
+    private final Personaje personaje;
+    private final Pantalla ventana;
+
+    // =========================================================================
+    // 6. GESTOR DE BALAS, ENEMIGOS, SONIDOS Y PISTAS
+    // =========================================================================
+
+    private final GestorBalas gestorBalas = new GestorBalas();
+    private final GestorEnemigos gestorEnemigos;
+    private final GestorSonidos gestorSonidos = new GestorSonidos();
+    private final GestorPistas gestorPistas;
+
+    // =========================================================================
+    // 7. CONTROL DE MINIJUEGOS, PISTAS Y MENSAJES
+    // =========================================================================
+
+    // Indica si el personaje está dentro de un minijuego
+    public boolean enMinijuego = false;
+
+    // Mensaje "Pulsa ENTER para acceder al minijuego"
+    private boolean mostrarMensajeMinijuego = false;
+
+    // Mensaje "Pulsa ENTER para inspeccionar (pista)"
+    private boolean mostrarMensajePista = false;
+
+    // Para ejecutar acciones puntuales cuando se pulsa ENTER
+    private Runnable eventoEnter;
+
+    // =========================================================================
+    // 8. CONTROL DE ESTADOS (caminar, correr, alarma, etc.)
+    // =========================================================================
+
+    private boolean estaCaminando = false;
+    private boolean estaCorriendo = false;
+    private boolean alarmaActivada = false;
+
+    // =========================================================================
+    // 9. CONSTRUCTOR
+    // =========================================================================
 
     /**
-     * Inicializa el movimiento, captura eventos de teclado y ratón,
-     * y sincroniza la cámara con el escenario, colisiones y disparo de balas.
+     * @param ventana    Referencia a la ventana principal.
+     * @param escenario  Escenario actual (mapa).
+     * @param colisiones Panel que maneja las colisiones.
+     * @param personaje  Personaje controlado por el jugador.
      */
+    public Movimiento(Pantalla ventana, EscenarioDistritoSombrio escenario,
+                      ColisionesPanel colisiones, Personaje personaje) {
 
-    public Movimiento(Pantalla ventana, EscenarioDistritoSombrio escenario, ColisionesPanel colisiones, Personaje personaje) {
-        this.ventana = ventana; // 🔹 Guardamos la referencia a la ventana
+        this.ventana = ventana;
         this.escenario = escenario;
         this.colisiones = colisiones;
         this.personaje = personaje;
+        this.gestorPistas = ventana.getGestorPistas();
+        this.gestorEnemigos = new GestorEnemigos(gestorSonidos);
+
         setOpaque(false);
         setFocusable(true);
 
-        // 🔹 Establecer desplazamiento inicial
+        // Posición inicial de la cámara
         this.desplazamientoX = 640;
         this.desplazamientoY = 360;
 
-        // 🔹 Asegurar que el escenario y colisiones empiecen en la posición correcta
+        // Ajustamos el escenario y colisiones al desplazamiento inicial
         escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY);
         colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
 
+        // Se configuran los listeners de teclado y ratón
         configurarEventos();
     }
 
-    /** Configura los eventos de teclado y ratón. */
+    // =========================================================================
+    // 10. CONFIGURACIÓN DE EVENTOS
+    // =========================================================================
+
+    /** Configura los KeyListeners y MouseListeners para controlar movimiento,
+     *  disparos y rotación del personaje. */
     private void configurarEventos() {
-        // Captura de teclado
+        // Evento de teclado
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 toggleMovement(e.getKeyCode(), true);
 
-                // 🔹 Si el jugador está en la zona y pulsa ENTER, entra al minijuego
+                // Si el jugador está en la zona y pulsa ENTER, entra al minijuego
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && mostrarMensajeMinijuego) {
                     System.out.println("📍 Accediendo al minijuego...");
                     enMinijuego = true;
-                    mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje al entrar
+                    mostrarMensajeMinijuego = false;
                     ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
                 }
 
+                // Si hay un evento ENTER asignado, se ejecuta (p.e. mostrar pista)
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && eventoEnter != null) {
+                    eventoEnter.run();
+                    eventoEnter = null; // Evita repeticiones en bucle
+                }
             }
 
             @Override
@@ -104,7 +171,7 @@ public class Movimiento extends JPanel implements ActionListener {
             }
         });
 
-        // Captura de movimiento del ratón
+        // Evento de movimiento de ratón
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -113,30 +180,22 @@ public class Movimiento extends JPanel implements ActionListener {
             }
         });
 
-        // Captura de clics del ratón
+        // Evento de clic de ratón
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    dispararBala(); // 🔹 Dispara una bala con el clic izquierdo
+                    dispararBala();
                 }
             }
         });
     }
 
-    //---------------------------------------------------
-    //  🔹 LÓGICA DE MOVIMIENTO Y DISPARO
-    //---------------------------------------------------
+    // =========================================================================
+    // 11. LÓGICA DE MOVIMIENTO Y DISPARO
+    // =========================================================================
 
-    /** Calcula el ángulo de rotación del personaje basado en la posición del ratón. */
-    private void calcularAnguloRotacion() {
-        anguloRotacion = Math.atan2(
-                (posicionRaton.y - desplazamientoY) - (double) SCREEN_HEIGHT / 2,
-                (posicionRaton.x - desplazamientoX) - (double) SCREEN_WIDTH / 2
-        );
-    }
-
-    /** Activa o desactiva el movimiento según la tecla presionada. */
+    /** Cambia el estado de las variables de movimiento (arriba, abajo, izquierda, derecha, correr). */
     private void toggleMovement(int keyCode, boolean pressed) {
         switch (keyCode) {
             case KeyEvent.VK_W -> up = pressed;
@@ -144,125 +203,193 @@ public class Movimiento extends JPanel implements ActionListener {
             case KeyEvent.VK_A -> left = pressed;
             case KeyEvent.VK_D -> right = pressed;
             case KeyEvent.VK_SPACE -> {
-                space = pressed; // Detecta si el espacio está presionado
-                ajustarVelocidad(); // Cambia la velocidad según el espacio
+                space = pressed;
+                ajustarVelocidad(); // Ajusta velocidad según si está corriendo
             }
         }
     }
 
-    /** Ajusta la velocidad según si se está presionando la tecla espacio o no. */
+    /** Define si el jugador camina o corre, modificando la velocidad y el estado del personaje. */
     private void ajustarVelocidad() {
         if (space) {
-            velocidad = 5; // Aumenta la velocidad cuando "ESPACIO" está presionado
-            personaje.setCorrer(true); // Cambia al GIF de correr
+            velocidad = VELOCIDAD_CORRER;
+            personaje.setCorrer(true);
         } else {
-            velocidad = 3; // Vuelve a la velocidad normal
-            personaje.setCorrer(false); // Cambia al GIF normal
+            velocidad = VELOCIDAD_CAMINAR;
+            personaje.setCorrer(false);
         }
     }
 
-
-
-    /**
-     * Dispara una nueva bala hacia la posición del ratón.
-     * La bala se inicia en el centro de la pantalla y se mueve hacia
-     * la posición del ratón relativa a la ventana.
-     */
+    /** Dispara una bala desde la posición del personaje hacia la posición del ratón. */
     private void dispararBala() {
-        // Coordenadas iniciales: el centro de la pantalla
+        gestorSonidos.reproducirEfecto("/audio/NoirShotC.wav");
+
         double xInicial = personaje.getX();
         double yInicial = personaje.getY();
 
-        // Coordenadas objetiv: posición actual del ratón (relativa al desplazamiento del mapa)
         double objetivoX = posicionRaton.x;
         double objetivoY = posicionRaton.y;
 
-
-        // Llamar al gestor de balas para disparar
         gestorBalas.disparar(xInicial, yInicial, objetivoX, objetivoY);
     }
 
-
-    //---------------------------------------------------
-    //  🔹 LÓGICA PRINCIPAL DE MOVIMIENTO
-    //---------------------------------------------------
+    // =========================================================================
+    // 12. BUCLE PRINCIPAL DE MOVIMIENTO (SE LLAMA REGULARMENTE)
+    // =========================================================================
 
     /**
-     * Sincroniza el desplazamiento del mapa con las colisiones y gestiona las balas.
+     * Se encarga de:
+     *  - Verificar colisiones y mover al jugador en consecuencia
+     *  - Administrar sonidos de pasos/correr
+     *  - Verificar zonas especiales (alarmas, minijuego, pistas, etc.)
+     *  - Actualizar enemigos y balas
      */
     public void moverJugador() {
 
-        // Verificar colisiones en las cuatro direcciones
+        // ─────────────────────────────────────────────────────────────────────
+        // 🔹 BLOQUEA el movimiento si estamos en cinemática
+        // ─────────────────────────────────────────────────────────────────────
+        if (ventana.isEnCinematica()) {
+            System.out.println("[DEBUG] Se ha detectado cinemática: no actualizo movimiento ni enemigos.");
+            return;
+        }
+
+        // 1. Verificar colisiones
         boolean[] colisionesDirecciones = verificarColisiones();
 
-        // Calcular movimiento basado en las teclas y las colisiones
+        // 2. Calcular movimiento
         double[] movimiento = calcularMovimiento(colisionesDirecciones);
 
-        // Aplicar el movimiento calculado al mapa
+        // 3. Aplicar movimiento al escenario
         aplicarMovimiento(movimiento);
 
-        // Actualizar las coordenadas reales del personaje
+        // 4. Actualizar posición real del personaje
         int personajeRealX = desplazamientoX + SCREEN_WIDTH / 2;
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
-
-
-        // Sincronizar las coordenadas reales con el objeto `Personaje`
         personaje.setPosicion(personajeRealX, personajeRealY);
 
+        // 5. Verificar pistas en la posición actual
+        gestorPistas.verificarPistas(personajeRealX, personajeRealY);
 
-        // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
-        // 🔹 Definir los límites de las casas donde deben desaparecer los tejados
-        Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
-        Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
+        // 6. Ocultar/mostrar tejados dependiendo de si el jugador está dentro de alguna casa
+        gestionarTejados(personajeRealX, personajeRealY);
 
-// 🔹 Verificar si el jugador está dentro de una de las casas
-        int personajeX = personaje.getX();
-        int personajeY = personaje.getY();
+        // 7. Comprobar zona de minijuego (caja fuerte)
+        gestionarMinijuegoCajaFuerte(personajeRealX, personajeRealY);
 
-        if (casa1.contains(personajeX, personajeY) || casa2.contains(personajeX, personajeY)) {
-            mostrarTejados = false; // 🔹 Oculta los tejados
-        } else {
-            mostrarTejados = true; // 🔹 Vuelve a mostrarlos
-        }
+        // 8. Comprobar zona de alarma y reproducirla una sola vez
+        gestionarAlarma(personajeRealX, personajeRealY);
 
+        // 9. Administrar sonidos de pasos/carrera
+        gestionarSonidosPasos(movimiento);
 
-        // 🔹 Verificar si el jugador ha llegado a la caja fuerte
-        if (personajeRealX >= 2713 && personajeRealX <= 2715 && personajeRealY >= 3809 && personajeRealY <= 3857) {
-            if (!mostrarMensajeMinijuego) {
-                System.out.println("📍 Pulsa ENTER para acceder al minijuego");
-                mostrarMensajeMinijuego = true; // 🔹 Activa el mensaje en pantalla
-            }
-        } else {
-            mostrarMensajeMinijuego = false; // 🔹 Oculta el mensaje si se aleja
-        }
-
-
-
-        // 🔹 Actualizar enemigos: movimiento hacia el personaje y colisiones con balas
+        // 10. Actualizar enemigos y balas
         gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         gestorEnemigos.verificarColisiones(gestorBalas);
 
-        // 🔹 Añadir lógica de oleadas de enemigos
         if (gestorEnemigos.enemigosEliminados()) {
-            // Generar nueva oleada
-            gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
+            // Generar nueva oleada (ejemplo)
+            gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones,
+                    desplazamientoX, desplazamientoY);
         }
 
-
-        // 🔹 Actualizar las balas activas
         gestorBalas.actualizar(colisiones, desplazamientoX, desplazamientoY);
     }
 
+    // =========================================================================
+    // 12.1. GESTIÓN DE TEJADOS, MINIJUEGO Y ALARMAS
+    // =========================================================================
 
-    /** Verifica las colisiones y retorna un array con los resultados [arriba, abajo, izquierda, derecha]. */
+    /** Si el jugador está dentro de ciertas casas, se ocultan los tejados. */
+    private void gestionarTejados(int x, int y) {
+        // Definir límites de las casas
+        Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
+        Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
+
+        if (casa1.contains(x, y) || casa2.contains(x, y)) {
+            mostrarTejados = false;
+        } else {
+            mostrarTejados = true;
+        }
+    }
+
+    /** Si el jugador está cerca de la caja fuerte, se muestra un mensaje para entrar al minijuego. */
+    private void gestionarMinijuegoCajaFuerte(int x, int y) {
+        if (x >= 2713 && x <= 2715 && y >= 3809 && y <= 3857) {
+            if (!mostrarMensajeMinijuego) {
+                System.out.println("📍 Pulsa ENTER para acceder al minijuego");
+                mostrarMensajeMinijuego = true;
+            }
+        } else {
+            mostrarMensajeMinijuego = false;
+        }
+    }
+
+    /** Zona donde suena una alarma cuando el jugador entra, pero solo se activa una vez
+     *  hasta que sale de la zona. */
+    private void gestionarAlarma(int x, int y) {
+        Rectangle zonaAlarma = new Rectangle(2499, 1854, 1301, 2588);
+        if (zonaAlarma.contains(x, y)) {
+            if (!alarmaActivada) {
+                System.out.println("🚨 Alarma activada: ¡Intruso detectado!");
+                gestorSonidos.reproducirEfecto("/audio/NoirAreaAlarm.wav");
+                alarmaActivada = true;
+            }
+        } else {
+            alarmaActivada = false;
+        }
+    }
+
+    // =========================================================================
+    // 12.2. GESTIÓN DE SONIDOS (PASOS Y CARRERA)
+    // =========================================================================
+
+    /** Activa o desactiva los sonidos de pasos y carrera según el movimiento del personaje. */
+    private void gestionarSonidosPasos(double[] movimiento) {
+        if (movimiento[0] != 0 || movimiento[1] != 0) {
+            // Movimiento en x o y distinto de 0 => se está desplazando
+            if (space) { // Correr
+                if (!estaCorriendo) {
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+                    gestorSonidos.reproducirBucle("/audio/NoirRun.wav");
+                    estaCorriendo = true;
+                    estaCaminando = false;
+                }
+            } else { // Caminar
+                if (!estaCaminando) {
+                    gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                    gestorSonidos.reproducirBucle("/audio/NoirStep3b.wav");
+                    estaCaminando = true;
+                    estaCorriendo = false;
+                }
+            }
+        } else {
+            // Se detuvo
+            if (estaCaminando || estaCorriendo) {
+                gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+                gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                estaCaminando = false;
+                estaCorriendo = false;
+            }
+        }
+    }
+
+    // =========================================================================
+    // 13. LÓGICA DE COLISIONES
+    // =========================================================================
+
+    /**
+     * Verifica si hay colisiones en las cuatro direcciones principales.
+     * Devuelve un array [arriba, abajo, izquierda, derecha].
+     */
     private boolean[] verificarColisiones() {
         int hitbox = 10;
 
-        // Ajustamos las coordenadas globales basadas en el desplazamiento del mapa
+        // Coordenadas globales
         int globalX = personaje.getX() - desplazamientoX;
         int globalY = personaje.getY() - desplazamientoY;
 
-        // Verificamos las colisiones en las cuatro direcciones usando estas coordenadas globales
+        // Chequeo de colisiones en cuatro direcciones
         boolean colisionArriba = colisiones.hayColision(globalX, globalY - hitbox - velocidad);
         boolean colisionAbajo = colisiones.hayColision(globalX, globalY + hitbox + velocidad);
         boolean colisionIzquierda = colisiones.hayColision(globalX - hitbox - velocidad, globalY);
@@ -271,8 +398,7 @@ public class Movimiento extends JPanel implements ActionListener {
         return new boolean[]{colisionArriba, colisionAbajo, colisionIzquierda, colisionDerecha};
     }
 
-
-    /** Calcula el movimiento del personaje basado en las teclas presionadas y las colisiones detectadas. */
+    /** Calcula cuánto se mueve el personaje en X e Y, según teclas, colisiones y velocidad. */
     private double[] calcularMovimiento(boolean[] colisionesDirecciones) {
         double moveX = 0, moveY = 0;
 
@@ -281,7 +407,7 @@ public class Movimiento extends JPanel implements ActionListener {
         if (left && !colisionesDirecciones[2]) moveX -= velocidad;
         if (right && !colisionesDirecciones[3]) moveX += velocidad;
 
-        // Normaliza el movimiento diagonal para que no sea más rápido
+        // Normalizar en diagonal (para no ir más rápido en diagonales)
         double length = Math.sqrt(moveX * moveX + moveY * moveY);
         if (length > 0) {
             moveX = (moveX / length) * velocidad;
@@ -291,15 +417,16 @@ public class Movimiento extends JPanel implements ActionListener {
         return new double[]{moveX, moveY};
     }
 
-    /** Aplica el movimiento calculado al desplazamiento del mapa y actualiza los límites del escenario. */
+    /** Aplica el movimiento calculado al desplazamiento (cámara) y respeta los límites del mapa. */
     private void aplicarMovimiento(double[] movimiento) {
         int nuevoX = desplazamientoX + (int) movimiento[0];
         int nuevoY = desplazamientoY + (int) movimiento[1];
 
-        // Limitar el movimiento dentro de los límites del mapa
+        // Limitar el movimiento dentro de los bordes del escenario
         nuevoX = Math.max(0, Math.min(nuevoX, escenario.getAncho() - SCREEN_WIDTH));
         nuevoY = Math.max(0, Math.min(nuevoY, escenario.getAlto() - SCREEN_HEIGHT));
 
+        // Actualizar solo si cambió
         if (nuevoX != desplazamientoX || nuevoY != desplazamientoY) {
             desplazamientoX = nuevoX;
             desplazamientoY = nuevoY;
@@ -308,66 +435,115 @@ public class Movimiento extends JPanel implements ActionListener {
         }
     }
 
-    //---------------------------------------------------
-    //  🔹 DIBUJADO DEL PERSONAJE Y LAS BALAS
-    //---------------------------------------------------
+    // =========================================================================
+    // 14. ROTACIÓN DEL PERSONAJE HACIA EL RATÓN
+    // =========================================================================
+
+    /**
+     * Calcula el ángulo de rotación basado en la posición del ratón
+     * vs el centro de la pantalla.
+     */
+    private void calcularAnguloRotacion() {
+        anguloRotacion = Math.atan2(
+                (posicionRaton.y - desplazamientoY) - (double) SCREEN_HEIGHT / 2,
+                (posicionRaton.x - desplazamientoX) - (double) SCREEN_WIDTH / 2
+        );
+    }
+
+    // =========================================================================
+    // 15. PINTADO DEL PERSONAJE Y DEMÁS ELEMENTOS EN PANTALLA
+    // =========================================================================
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g; // 🔹 NO BORRAR ESTA LÍNEA
+        Graphics2D g2d = (Graphics2D) g;
 
+        // 1. Dibujar tejados si están activos
+        if (mostrarTejados) {
+            g.drawImage(ventana.getTejados(), -desplazamientoX, -desplazamientoY, null);
+        }
 
+        // 2. Dibujar mensajes de minijuego y pistas
+        dibujarMensajes(g);
 
-            // 🔹 Dibujar los tejados si están activos
-            if (mostrarTejados) {
-                g.drawImage(ventana.getTejados(), 0 - desplazamientoX, 0 - desplazamientoY, null);
-            }
+        // 3. Dibujar personaje con rotación
+        dibujarPersonaje(g2d);
 
+        // 4. Dibujar balas y enemigos
+        gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
+        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY);
+    }
 
-            // 🔹 Si el mensaje está activado, mostrarlo en la pantalla
+    /** Muestra los textos en pantalla de “Pulsa ENTER...” para minijuego y pistas. */
+    private void dibujarMensajes(Graphics g) {
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+
         if (mostrarMensajeMinijuego) {
-            g.setColor(Color.WHITE);
-            g.setFont(new Font("Arial", Font.BOLD, 18));
             g.drawString("Pulsa ENTER para abrir la caja fuerte", SCREEN_WIDTH / 2 - 150, 50);
         }
+        if (mostrarMensajePista) {
+            g.drawString("Pulsa ENTER para inspeccionar", SCREEN_WIDTH / 2 - 150, 80);
+        }
+    }
 
-        // Obtener la imagen del personaje
+    /** Renderiza la imagen del personaje rotada hacia la posición del ratón. */
+    private void dibujarPersonaje(Graphics2D g2d) {
         Image imagenPersonaje = personaje.getImagen();
-        if (imagenPersonaje != null) {
-            g2d.drawImage(imagenPersonaje, -37, -35, this); // Centrado basado en 75x70
+        if (imagenPersonaje == null) {
+            return;
         }
 
-
-        // Dibujar la imagen del personaje en el centro de la pantalla con rotación
+        // Trasladar el Graphics2D al centro de la pantalla
         g2d.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+        // Rotar el personaje
         g2d.rotate(anguloRotacion);
 
+        // Dibujar imagen en el centro
         int anchoImagen = imagenPersonaje.getWidth(this);
         int altoImagen = imagenPersonaje.getHeight(this);
         if (anchoImagen > 0 && altoImagen > 0) {
             g2d.drawImage(imagenPersonaje, -anchoImagen / 2, -altoImagen / 2, this);
         }
 
+        // Deshacer la rotación y la traslación
         g2d.rotate(-anguloRotacion);
         g2d.translate(-SCREEN_WIDTH / 2, -SCREEN_HEIGHT / 2);
-
-        // 🔹 Dibujar las balas
-        gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
-
-        // 🔹 Dibujar enemigos
-        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY);
-
-
     }
+
+    // =========================================================================
+    // 16. GETTERS / SETTERS Y OTROS MÉTODOS PÚBLICOS
+    // =========================================================================
+
+    /** Define si el jugador está o no dentro de un minijuego. */
     public void setEnMinijuego(boolean estado) {
         this.enMinijuego = estado;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
+    /** Para permitir que otras clases activen o desactiven el mensaje de pista. */
+    public void setMostrarMensajePista(boolean mostrar) {
+        this.mostrarMensajePista = mostrar;
     }
 
+    /** Para consultar el estado del mensaje de pista. */
+    public boolean isMostrarMensajePista() {
+        return mostrarMensajePista;
+    }
+
+    /** Agrega una acción que se ejecutará cuando se presione ENTER. */
+    public void agregarEventoEnter(Runnable accion) {
+        this.eventoEnter = accion;
+    }
+
+    // =========================================================================
+    // 17. MÉTODO DE LA INTERFAZ ActionListener (SI SE NECESITA)
+    // =========================================================================
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // Actualmente vacío
+    }
 
 }
