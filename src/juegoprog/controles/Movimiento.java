@@ -135,6 +135,11 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Se configuran los listeners de teclado y ratón
         configurarEventos();
+
+        // ─────────────────────────────────────────────────────────────────
+        // NUEVO: Asignar la ventana para comprobar la cinemática en GestorEnemigos
+        // ─────────────────────────────────────────────────────────────────
+        this.gestorEnemigos.setPantalla(ventana);
     }
 
     // =========================================================================
@@ -350,7 +355,8 @@ public class Movimiento extends JPanel implements ActionListener {
             // Movimiento en x o y distinto de 0 => se está desplazando
             if (space) { // Correr
                 if (!estaCorriendo) {
-                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+                    gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav"); // Aseguramos detener el otro
                     gestorSonidos.reproducirBucle("/audio/NoirRun.wav");
                     estaCorriendo = true;
                     estaCaminando = false;
@@ -358,6 +364,7 @@ public class Movimiento extends JPanel implements ActionListener {
             } else { // Caminar
                 if (!estaCaminando) {
                     gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
                     gestorSonidos.reproducirBucle("/audio/NoirStep3b.wav");
                     estaCaminando = true;
                     estaCorriendo = false;

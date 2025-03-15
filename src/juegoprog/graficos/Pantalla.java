@@ -238,7 +238,7 @@ public class Pantalla extends JFrame {
             lastTime = currentTime;
 
             SwingUtilities.invokeLater(() ->
-                    setTitle("Juego - FPS: " + String.format("%.2f", fps))
+                    setTitle("NOIR CITY - FPS: " + String.format("%.2f", fps))
             );
         }
     }
