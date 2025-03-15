@@ -119,6 +119,8 @@ public class Dial extends JPanel {
                         "CAJA FUERTE DESBLOQUEADA",
                         JOptionPane.INFORMATION_MESSAGE
                 );
+                // 🔹 Reproducir sonido de papeles al abrir los documentos
+                ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPaper.wav");
 
                 // 🔹 Mostrar la imagen de los documentos
                 JLabel texto = new JLabel("¡Has encontrado los documentos que buscabas!", SwingConstants.CENTER);
