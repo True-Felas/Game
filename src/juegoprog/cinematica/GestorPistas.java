@@ -25,6 +25,13 @@ public class GestorPistas {
                 new String[]{"/resources/pistas/76A.png", "/resources/pistas/76B.png"}
         ));
 
+        // ────────────── NUEVA PISTA AÑADIDA ──────────────
+        pistas.put("190", new Pista(
+                new Rectangle(2823, 1283, 251, 228),
+                new String[]{"/resources/pistas/190A.png", "/resources/pistas/190B.png", "/resources/pistas/190C.png"}
+        ));
+        // ──────────────────────────────────────────────────
+
         // 🔹 Inicializar el mapa de pistas vistas (todas comienzan como no vistas)
         for (String clave : pistas.keySet()) {
             pistasVistas.put(clave, false);
