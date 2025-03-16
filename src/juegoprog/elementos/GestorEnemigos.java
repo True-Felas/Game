@@ -19,7 +19,8 @@ public class GestorEnemigos {
     private final int[][] puntosRespawn = {
             {750, 420},       // Esquina Superior Izquierda
             {3350, 679},      // Esquina Superior Derecha
-            {840, 4285}       // Esquina Inferior Izquierda
+            {840, 4285},      // Esquina Inferior Izquierda
+            {3436, 3560}       //Esquina inferior derecha
     };
 
     /**

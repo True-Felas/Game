@@ -27,7 +27,6 @@ public class Movimiento extends JPanel implements ActionListener {
     private final int SCREEN_WIDTH = 1280;
     private final int SCREEN_HEIGHT = 720;
     private final int VELOCIDAD_CAMINAR = 3;  // Velocidad base
-    private final int VELOCIDAD_CORRER = 5;   // Velocidad al presionar SPACE
 
     // =========================================================================
     // 2. ATRIBUTOS DE CONTROL DE MOVIMIENTO
@@ -163,7 +162,7 @@ public class Movimiento extends JPanel implements ActionListener {
                     ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
                 }
 
-                // Si hay un evento ENTER asignado, se ejecuta (p.e. mostrar pista)
+                // Si hay un evento ENTER asignado, se ejecuta (p. ej. mostrar pista)
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && eventoEnter != null) {
                     eventoEnter.run();
                     eventoEnter = null; // Evita repeticiones en bucle
@@ -217,7 +216,8 @@ public class Movimiento extends JPanel implements ActionListener {
     /** Define si el jugador camina o corre, modificando la velocidad y el estado del personaje. */
     private void ajustarVelocidad() {
         if (space) {
-            velocidad = VELOCIDAD_CORRER;
+            // Velocidad al presionar SPACE
+            velocidad = 5;
             personaje.setCorrer(true);
         } else {
             velocidad = VELOCIDAD_CAMINAR;
@@ -311,11 +311,7 @@ public class Movimiento extends JPanel implements ActionListener {
         Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
         Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
 
-        if (casa1.contains(x, y) || casa2.contains(x, y)) {
-            mostrarTejados = false;
-        } else {
-            mostrarTejados = true;
-        }
+        mostrarTejados = !casa1.contains(x, y) && !casa2.contains(x, y);
     }
 
     /** Si el jugador está cerca de la caja fuerte, se muestra un mensaje para entrar al minijuego. */
@@ -534,18 +530,13 @@ public class Movimiento extends JPanel implements ActionListener {
         this.mostrarMensajePista = mostrar;
     }
 
-    /** Para consultar el estado del mensaje de pista. */
-    public boolean isMostrarMensajePista() {
-        return mostrarMensajePista;
-    }
-
     /** Agrega una acción que se ejecutará cuando se presione ENTER. */
     public void agregarEventoEnter(Runnable accion) {
         this.eventoEnter = accion;
     }
 
     // =========================================================================
-    // 17. MÉTODO DE LA INTERFAZ ActionListener (SI SE NECESITA)
+    // 17. METODO DE LA INTERFAZ ActionListener (SI SE NECESITA)
     // =========================================================================
 
     @Override
