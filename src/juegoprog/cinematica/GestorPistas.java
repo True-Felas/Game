@@ -71,6 +71,10 @@ public class GestorPistas {
 
         JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel(new ImageIcon(getClass().getResource(imagenes[0])));
+
+        // 🔹 Reproducimos sonido al mostrar la primera imagen
+        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPista.wav");
+
         panel.add(label, BorderLayout.CENTER);
 
         JLabel texto = new JLabel("Pulsa ENTER para continuar", SwingConstants.CENTER);
