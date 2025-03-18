@@ -13,6 +13,7 @@ public class Personaje extends JPanel {
     private int x = 50;
     private int y = 50;
 
+    private int vida;
     // Constructor
     public Personaje() {
         // Cargar GIFs
@@ -21,6 +22,8 @@ public class Personaje extends JPanel {
 
         // Por defecto, usa el GIF normal
         gifActual = gifNormal;
+
+        this.vida = 3;
     }
 
     public Image getImagen() {
@@ -45,7 +48,7 @@ public class Personaje extends JPanel {
         }
     }
 
-    // Cambiar entre los GIFs
+    // Cambiar entre los GIF
     public void setCorrer(boolean corriendo) {
         if (corriendo) {
             gifActual = gifCorrer;  // Si está corriendo, usa el GIF de correr
@@ -63,8 +66,21 @@ public class Personaje extends JPanel {
         return y;
     }
 
+
     public void setPosicion(int x, int y) {
         this.x = x;
         this.y = y;
     }
+
+    // Métodos para la vida del personaje
+
+    public int getVida() {
+        return vida; // Obtener vida actual
+    }
+
+    public void setVida(int vida) {
+        this.vida = Math.max(0, vida); // Aseguramos que la vida no sea negativa
+    }
+
+
 }

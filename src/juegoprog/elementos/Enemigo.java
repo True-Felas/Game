@@ -2,6 +2,7 @@ package juegoprog.elementos;
 
 import juegoprog.audio.GestorSonidos;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.jugador.Personaje;
 
 import javax.swing.*;
 import java.awt.*;
@@ -118,6 +119,9 @@ public class Enemigo {
      */
     private static long ultimoGrito = 0;
 
+    private boolean causandoDanio = false; // Indica si este enemigo está causando daño al jugador
+    private Timer timerDanio; // Temporizador para el daño continuo
+
     // =========================================================================
     // 1. CONSTRUCTOR
     // =========================================================================
@@ -169,7 +173,60 @@ public class Enemigo {
         }
     }
 
-    // =========================================================================
+    // Metodo que verifica cuando el enemigo está en colisión con el personaje
+    public void verificarColision(Personaje personaje) {
+        // Coordenadas del enemigo
+        int enemigoX = (int) x;
+        int enemigoY = (int) y;
+
+        // Coordenadas del personaje
+        int personajeX = personaje.getX();
+        int personajeY = personaje.getY();
+
+        // Distancia entre enemigo y personaje
+        int distancia = (int) Math.sqrt(
+                Math.pow(enemigoX - personajeX, 2) + Math.pow(enemigoY - personajeY, 2)
+        );
+
+        // Si el enemigo está en contacto (colisión)
+        if (distancia <= tamano) {
+            // Al inicio de la colisión, causamos daño inmediato y preparamos el temporizador
+            if (!causandoDanio) {
+                causandoDanio = true;
+                causarDanio(personaje); // Daño inicial
+                iniciarTemporizadorDanio(personaje); // Daño periódico
+            }
+        } else {
+            // Si el enemigo ya no está en contacto, detenemos el daño periódico
+            if (causandoDanio) {
+                causandoDanio = false;
+                detenerTemporizadorDanio();
+            }
+        }
+    }
+
+    // Metodo para causar daño al personaje
+    private void causarDanio(Personaje personaje) {
+        personaje.setVida(personaje.getVida() - 1);
+        System.out.println("El personaje ha recibido daño. Vida restante: " + personaje.getVida());
+    }
+
+    // Inicia un temporizador que aplica daño cada 500 ms mientras haya colisión
+    private void iniciarTemporizadorDanio(Personaje personaje) {
+        timerDanio = new Timer(500, e -> causarDanio(personaje));
+        timerDanio.start();
+    }
+
+    // Detiene el temporizador de daño periódico
+    private void detenerTemporizadorDanio() {
+        if (timerDanio != null) {
+            timerDanio.stop();
+            timerDanio = null;
+        }
+    }
+
+
+// =========================================================================
     // 3. PERSECUCIÓN DEL JUGADOR
     // =========================================================================
 
@@ -185,29 +242,42 @@ public class Enemigo {
     private void perseguirJugador(double objetivoXJugador, double objetivoYJugador,
                                   ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
 
-        // Se mueve hacia el jugador con cierta velocidad
+        // Velocidad aumentada al perseguir al jugador
         double velocidadPersecucion = 4;
         moverHaciaDestino(objetivoXJugador, objetivoYJugador, velocidadPersecucion,
                 colisiones, desplazamientoX, desplazamientoY);
 
-        // Reglas para soltar un "grito" de alerta
-        if (!yaEmitioAlerta
-                && --delayAlerta <= 0
-                && new Random().nextInt(50) == 0
-                && System.currentTimeMillis() - ultimoGrito > 5000) {
+        // Si antes no estaba persiguiendo, entonces ahora emite el grito
+        if (!estabaPersiguiendo) {
+            // Grito inmediato al entrar al modo de persecución
+            emitirGrito();
 
-            // Seleccionar uno de dos sonidos de alerta
+            yaEmitioAlerta = true; // Marcamos que ya se emitió el grito de alerta
+        }
+
+        // Registrar que ahora sí está persiguiendo
+        estabaPersiguiendo = true;
+    }
+
+    private void emitirGrito() {
+        // Asegurarnos de que no hay múltiples gritos a la vez
+        if (System.currentTimeMillis() - ultimoGrito > 3000) { // Intervalo mínimo de 3 segundos
+            // Seleccionar uno de los dos sonidos de alerta
             String sonidoAlerta = new Random().nextBoolean()
                     ? "/audio/NoirAlertA.wav"
                     : "/audio/NoirAlertB.wav";
+
+            // Reproducir el sonido usando el gestor de sonidos
             gestorSonidos.reproducirEfecto(sonidoAlerta);
 
-            yaEmitioAlerta = true;
+            // Actualizar el tiempo del último grito
             ultimoGrito = System.currentTimeMillis();
-        }
 
-        estabaPersiguiendo = true;
+            System.out.println("¡Grito emitido por el enemigo!"); // Para debug
+        }
     }
+
+
 
     // =========================================================================
     // 4. MOVIMIENTO ALEATORIO
@@ -221,6 +291,9 @@ public class Enemigo {
      * @param desplazamientoY  Offset de la cámara en Y. */
 
     private void moverAleatoriamente(ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
+        // Reiniciar si dejó de perseguir
+        estabaPersiguiendo = false;
+
         // Si se agotó el tiempo o el enemigo está atascado, busca un nuevo destino
         if (tiempoCambioDireccion <= 0 || intentosMoverse >= 5) {
             calcularDestinoAleatorio();
@@ -243,7 +316,7 @@ public class Enemigo {
     }
 
     // =========================================================================
-    // 5. MÉTODO GENÉRICO PARA MOVER HACIA UN DESTINO
+    // 5. METODO GENÉRICO PARA MOVER HACIA UN DESTINO
     // =========================================================================
 
     /** Intenta mover al enemigo hacia un destino (destinoX, destinoY), teniendo en cuenta colisiones.

@@ -4,6 +4,8 @@ import juegoprog.audio.GestorMusica;
 import juegoprog.audio.GestorSonidos;
 import juegoprog.cinematica.Cinematica;
 import juegoprog.cinematica.GestorPistas;
+import juegoprog.elementos.Dial;
+import juegoprog.elementos.Enemigo;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
@@ -39,6 +41,13 @@ public class Pantalla extends JFrame {
     private Image tejados;                       // Imagen de los tejados del escenario
     private GestorPistas gestorPistas;           // Gestiona pistas (investigación / recolección)
 
+    private PanelVidas panelVidas;
+
+    private Personaje personaje; // Personaje principal
+
+    private boolean partidaTerminada = false; // Bandera para saber si la partida terminó
+
+    private boolean bucleEnEjecucion = true;
     // =========================================================================
     // 2. CONSTRUCTOR Y CONFIGURACIÓN INICIAL
     // =========================================================================
@@ -93,7 +102,7 @@ public class Pantalla extends JFrame {
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
         // Personaje principal
-        Personaje personaje = new Personaje();
+       personaje = new Personaje();
 
         // Control de movimiento (manejador de la lógica principal del juego)
         movimiento = new Movimiento(this, escenario, colisiones, personaje);
@@ -105,13 +114,18 @@ public class Pantalla extends JFrame {
         minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236);
         capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Se coloca por encima de las capas base
 
+        // Crear el panel de vidas
+        panelVidas = new PanelVidas(3); // Inicia con 3 vidas
+        panelVidas.setBounds(0, 0, 200, 50); // Colocarlo en la esquina superior izquierda
+        capaJuego.add(panelVidas, JLayeredPane.POPUP_LAYER);
+
         // Agregar esta "pantalla de juego" al CardLayout
         contenedorPrincipal.add(capaJuego, "JUEGO");
 
         // ---------------------------------------------------------------------
         // 2.5 Registrar el minijuego de la caja fuerte en el CardLayout
         // ---------------------------------------------------------------------
-        contenedorPrincipal.add(new juegoprog.elementos.Dial(this), "MINIJUEGO_CAJA_FUERTE");
+        contenedorPrincipal.add(new Dial(this), "MINIJUEGO_CAJA_FUERTE");
 
         // ---------------------------------------------------------------------
         // 2.6 Cargar la imagen de tejados y el gestor de música/sonidos
@@ -178,7 +192,7 @@ public class Pantalla extends JFrame {
             final int fps = 60;
             final long frameTime = 1_000_000_000L / fps; // nanos
 
-            while (true) {
+            while (bucleEnEjecucion) {
                 long startTime = System.nanoTime();
 
                 // Actualiza la lógica del juego
@@ -212,13 +226,51 @@ public class Pantalla extends JFrame {
      *  - Calcula y actualiza los FPS.
      */
     private void actualizar() {
-        // 🔹 Solo mover al jugador si NO estamos en cinemática
+        // No realiza lógica si la partida ya ha terminado
+        if (partidaTerminada) {
+            return;
+        }
+
+        // Solo actualiza si no estamos en cinemática
         if (!enCinematica) {
             movimiento.moverJugador();
+
+            // Verificar las colisiones entre enemigos y el personaje
+            for (Enemigo enemigo : GestorEnemigos.getEnemigos()) {
+                enemigo.verificarColision(personaje);
+            }
+
+            // Actualizar el panel de vidas si la vida del personaje cambia
+            panelVidas.actualizarVidas(personaje.getVida());
+
+            // Verificar si las vidas llegaron a 0
+            if (personaje.getVida() <= 0) {
+                terminarPartida();
+            }
         }
 
         calcularYActualizarFPS();
     }
+
+
+    private void terminarPartida() {
+        // Mostrar mensaje al jugador
+        JOptionPane.showMessageDialog(this, "¡Has perdido! El juego se reiniciará.", "Fin de la partida", JOptionPane.INFORMATION_MESSAGE);
+
+        // Cierra la ventana actual
+        this.dispose(); // Cierra la ventana actual y libera recursos asociados
+
+        // Reinicia el programa creando una nueva instancia desde el main
+        // Salir del programa de manera limpia
+        System.exit(0);
+
+    }
+
+
+
+
+
+
 
     // =========================================================================
     // 6. CÁLCULO Y MOSTRADO DE FPS EN LA VENTANA
@@ -286,7 +338,7 @@ public class Pantalla extends JFrame {
         return gestorPistas;
     }
 
-    /** Método 'placeholder' si se necesita en otros componentes */
+    /** Metodo 'placeholder' si se necesita en otros componentes */
     public void mostrarImagenPista(String[] imagenes, Object o) {
         // Actualmente sin implementación
     }
