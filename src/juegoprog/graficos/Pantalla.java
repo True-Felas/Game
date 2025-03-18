@@ -115,8 +115,8 @@ public class Pantalla extends JFrame {
         capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Se coloca por encima de las capas base
 
         // Crear el panel de vidas
-        panelVidas = new PanelVidas(3); // Inicia con 3 vidas
-        panelVidas.setBounds(0, 0, 200, 50); // Colocarlo en la esquina superior izquierda
+        panelVidas = new PanelVidas(3, "/resources/graficos/Vida2.png"); // Inicia con 3 vidas
+        panelVidas.setBounds(0, 0, 200, 100); // Colocarlo en la esquina superior izquierda
         capaJuego.add(panelVidas, JLayeredPane.POPUP_LAYER);
 
         // Agregar esta "pantalla de juego" al CardLayout

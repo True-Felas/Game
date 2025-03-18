@@ -6,32 +6,46 @@ import java.awt.*;
 public class PanelVidas extends JPanel {
 
     private int vidas; // Número de vidas actuales
+    private Image imagenVida; // Imagen para representar las vidas
 
     // Constructor que inicializa el número de vidas
-    public PanelVidas(int vidasIniciales) {
+    public PanelVidas(int vidasIniciales, String rutaImagen) {
         this.vidas = vidasIniciales;
-        setPreferredSize(new Dimension(200, 50)); // Tamaño del panel
+        ImageIcon icono = new ImageIcon(getClass().getResource("/resources/graficos/Vida2.png"));
+
+        if (icono.getIconWidth() == -1) {
+            System.err.println("Error: No se pudo cargar la imagen de la vida en " + rutaImagen);
+        } else {
+            System.out.println("Imagen cargada correctamente: " + rutaImagen);
+            this.imagenVida = icono.getImage().getScaledInstance(225, 225, Image.SCALE_SMOOTH);
+        }
+
+        setPreferredSize(new Dimension(225, 225)); // Tamaño del panel
     }
 
-    // Metodo para actualizar el número de vidas y redibujar el panel
+    // Método para actualizar el número de vidas y redibujar el panel
     public void actualizarVidas(int nuevasVidas) {
         this.vidas = nuevasVidas;
+        repaint(); // Redibuja el panel
     }
 
-    // Metodo para dibujar los puntos rojos según el número de vidas
+    // Método para dibujar las imágenes según el número de vidas
     @Override
     protected void paintComponent(Graphics g) {
 
-        // Color para las vidas restantes (puntos rojos)
-        g.setColor(Color.RED);
+        if (imagenVida == null) {
+            return; // No dibujar si la imagen no está cargada
+        }
 
-        // Dibujar tantos puntos como vidas tenga el personaje
-        int radio = 15; // Tamaño de los círculos
-        int espacio = 10; // Espaciado entre círculos
+        // Dibujar tantas imágenes como vidas tenga el personaje
+        int anchoImagen = 30;
+        int altoImagen = 30;
+        int espacio = 10; // Espaciado entre imágenes
+
         for (int i = 0; i < vidas; i++) {
-            int x = 10 + i * (radio + espacio); // Posición horizontal
-            int y = (getHeight() - radio) / 2; // Centra verticalmente
-            g.fillOval(x, y, radio, radio);
+            int x = 10 + i * (anchoImagen + espacio); // Posición horizontal
+            int y = (getHeight() - altoImagen) / 2; // Centra verticalmente
+            g.drawImage(imagenVida, x, y, anchoImagen, altoImagen, this);
         }
     }
 }
