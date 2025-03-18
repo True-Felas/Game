@@ -2,6 +2,7 @@ package juegoprog.graficos;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 public class PanelVidas extends JPanel {
 
@@ -11,7 +12,7 @@ public class PanelVidas extends JPanel {
     // Constructor que inicializa el número de vidas
     public PanelVidas(int vidasIniciales, String rutaImagen) {
         this.vidas = vidasIniciales;
-        ImageIcon icono = new ImageIcon(getClass().getResource("/resources/graficos/Vida2.png"));
+        ImageIcon icono = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/graficos/Vida3.png")));
 
         if (icono.getIconWidth() == -1) {
             System.err.println("Error: No se pudo cargar la imagen de la vida en " + rutaImagen);
@@ -23,13 +24,13 @@ public class PanelVidas extends JPanel {
         setPreferredSize(new Dimension(225, 225)); // Tamaño del panel
     }
 
-    // Método para actualizar el número de vidas y redibujar el panel
+    // Metodo para actualizar el número de vidas y redibujar el panel
     public void actualizarVidas(int nuevasVidas) {
         this.vidas = nuevasVidas;
         repaint(); // Redibuja el panel
     }
 
-    // Método para dibujar las imágenes según el número de vidas
+    // Metodo para dibujar las imágenes según el número de vidas
     @Override
     protected void paintComponent(Graphics g) {
 
@@ -38,8 +39,8 @@ public class PanelVidas extends JPanel {
         }
 
         // Dibujar tantas imágenes como vidas tenga el personaje
-        int anchoImagen = 30;
-        int altoImagen = 30;
+        int anchoImagen = 40;
+        int altoImagen = 40;
         int espacio = 10; // Espaciado entre imágenes
 
         for (int i = 0; i < vidas; i++) {
