@@ -28,14 +28,14 @@ public class GestorPistas {
 
         // 🔹 Definir las pistas con coordenadas e imágenes
 
-        // ────────────── PISTA UNO: 76 ──────────────
+        // ──────—─────── PISTA UNO: 76 ──────────────
 
         pistas.put("76", new Pista(
                 new Rectangle(1930, 3125, 198, 129),
                 new String[]{"/resources/pistas/76A.png", "/resources/pistas/76B.png"}
         ));
 
-        // ────────────── NUEVA PISTA AÑADIDA: SEGUNDA 190 ──────────────
+        // ────────—───── NUEVA PISTA AÑADIDA: SEGUNDA 190 ──────────────
 
         pistas.put("190", new Pista(
                 new Rectangle(2823, 1283, 251, 228),
@@ -155,7 +155,7 @@ public class GestorPistas {
     // Metodo para detener todos los enemigos usando GestorEnemigos
     private void detenerEnemigos() {
         for (Enemigo enemigo : gestorEnemigos.getEnemigos()) {
-            enemigo.detener(); // Llamamos al método detener() del enemigo
+            enemigo.detener(); // Llamamos al metodo detener() del enemigo
         }
     }
 
