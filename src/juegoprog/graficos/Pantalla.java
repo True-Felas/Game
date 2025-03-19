@@ -268,7 +268,7 @@ public class Pantalla extends JFrame {
 
 
         // Restablecer la salud y vidas del personaje
-        personaje.setVida(3); // Salud inicial
+        personaje.setVida(4); // Salud inicial
 
 
     }
