@@ -3,6 +3,7 @@ package juegoprog.graficos;
 import juegoprog.audio.GestorMusica;
 import juegoprog.audio.GestorSonidos;
 import juegoprog.cinematica.Cinematica;
+import juegoprog.cinematica.FinalMision;
 import juegoprog.cinematica.GestorPistas;
 import juegoprog.elementos.Dial;
 import juegoprog.elementos.Enemigo;
@@ -50,6 +51,10 @@ public class Pantalla extends JFrame {
     private boolean bucleEnEjecucion = true;
 
     private GestorEnemigos gestorEnemigos; // Añade esta variable
+
+    // Pantalla final del juego antes de regresar al menú.
+    private FinalMision finalMision;
+
 
     // =========================================================================
     // 2. CONSTRUCTOR Y CONFIGURACIÓN INICIAL
@@ -106,9 +111,9 @@ public class Pantalla extends JFrame {
 
         // Personaje principal
         personaje = new Personaje();
-
+        finalMision = new FinalMision(this);
         // Control de movimiento (manejador de la lógica principal del juego)
-        movimiento = new Movimiento(this, escenario, colisiones, personaje);
+        movimiento = new Movimiento(this, escenario, colisiones, personaje, finalMision);
         movimiento.setBounds(0, 0, 1280, 720);
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
@@ -136,6 +141,9 @@ public class Pantalla extends JFrame {
         tejados = new ImageIcon(Objects.requireNonNull(
                 getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))
         ).getImage();
+
+
+
 
         gestorMusica = new GestorMusica();
         gestorSonidos = new GestorSonidos(); // Inicializamos aquí para evitar null
@@ -255,7 +263,6 @@ public class Pantalla extends JFrame {
         calcularYActualizarFPS();
     }
 
-
     private void terminarPartida() {
         // Reiniciar las teclas para que el movimiento no continúe al reaparecer
         movimiento.reiniciarTeclas();
@@ -268,17 +275,12 @@ public class Pantalla extends JFrame {
 
 
         // Restablecer la salud y vidas del personaje
-        personaje.setVida(3); // Salud inicial
+        personaje.setVida(4); // Salud inicial
 
+// 🔹 REINICIAR EL ESTADO DE LA CAJA FUERTE PARA QUE NO SE GUARDE AL MORIR
+        finalMision.setCajaFuerteCompletada(false);
 
     }
-
-
-
-
-
-
-
 
     // =========================================================================
     // 6. CÁLCULO Y MOSTRADO DE FPS EN LA VENTANA
@@ -345,4 +347,8 @@ public class Pantalla extends JFrame {
     public GestorPistas getGestorPistas() {
         return gestorPistas;
     }
+
+    public FinalMision getFinalMision() { return finalMision; }
+
+
 }

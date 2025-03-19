@@ -185,6 +185,9 @@ public class Dial extends JPanel {
 
         ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPaper.wav");
 
+        // 🔹 MARCAR QUE LA CAJA FUERTE FUE COMPLETADA EN `FinalMision`
+        ventana.getFinalMision().setCajaFuerteCompletada(true);
+
         // Mostrar imagen de documentos
         JLabel texto = new JLabel("¡Has encontrado los documentos que buscabas!", SwingConstants.CENTER);
         texto.setFont(new Font("Arial", Font.BOLD, 25));

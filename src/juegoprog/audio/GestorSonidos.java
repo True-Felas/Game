@@ -59,4 +59,16 @@ public class GestorSonidos {
             clipsActivos.remove(ruta);
         }
     }
+
+    public void detenerTodosLosSonidos() {
+        for (String ruta : clipsActivos.keySet()) {
+            Clip clip = clipsActivos.get(ruta);
+            if (clip != null) {
+                clip.stop();
+                clip.close();
+            }
+        }
+        clipsActivos.clear(); // Limpiamos la lista de sonidos activos
+    }
+
 }

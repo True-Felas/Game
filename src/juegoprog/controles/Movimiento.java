@@ -1,6 +1,7 @@
 package juegoprog.controles;
 
 import juegoprog.audio.GestorSonidos;
+import juegoprog.cinematica.FinalMision;
 import juegoprog.cinematica.GestorPistas;
 import juegoprog.elementos.GestorBalas;
 import juegoprog.elementos.GestorEnemigos;
@@ -93,6 +94,9 @@ public class Movimiento extends JPanel implements ActionListener {
     // Para ejecutar acciones puntuales cuando se pulsa ENTER
     private Runnable eventoEnter;
 
+    // Atributo de FinalMision
+    private final FinalMision finalMision;
+
     // =========================================================================
     // 8. CONTROL DE ESTADOS (caminar, correr, alarma, etc.)
     // =========================================================================
@@ -112,7 +116,7 @@ public class Movimiento extends JPanel implements ActionListener {
      * @param personaje  Personaje controlado por el jugador.
      */
     public Movimiento(Pantalla ventana, EscenarioDistritoSombrio escenario,
-                      ColisionesPanel colisiones, Personaje personaje) {
+                      ColisionesPanel colisiones, Personaje personaje, FinalMision finalMision) {
 
         this.ventana = ventana;
         this.escenario = escenario;
@@ -120,6 +124,9 @@ public class Movimiento extends JPanel implements ActionListener {
         this.personaje = personaje;
         this.gestorPistas = ventana.getGestorPistas();
         this.gestorEnemigos = new GestorEnemigos(gestorSonidos);
+
+        // 🔹 Inicializamos FinalMision aquí dentro de Movimiento
+        this.finalMision = finalMision;
 
         setOpaque(false);
         setFocusable(true);
@@ -139,6 +146,7 @@ public class Movimiento extends JPanel implements ActionListener {
         // NUEVO: Asignar la ventana para comprobar la cinemática en GestorEnemigos
         // ─────────────────────────────────────────────────────────────────
         this.gestorEnemigos.setPantalla(ventana);
+
     }
 
     // =========================================================================
@@ -279,19 +287,22 @@ public class Movimiento extends JPanel implements ActionListener {
         // 5. Verificar pistas en la posición actual
         gestorPistas.verificarPistas(personajeRealX, personajeRealY);
 
-        // 6. Ocultar/mostrar tejados dependiendo de si el jugador está dentro de alguna casa
+        // 6 Verificar si el jugador está en la zona de escape (final del juego)
+        finalMision.verificarEscape(personajeRealX, personajeRealY);
+
+        // 7. Ocultar/mostrar tejados dependiendo de si el jugador está dentro de alguna casa
         gestionarTejados(personajeRealX, personajeRealY);
 
-        // 7. Comprobar zona de minijuego (caja fuerte)
+        // 8. Comprobar zona de minijuego (caja fuerte)
         gestionarMinijuegoCajaFuerte(personajeRealX, personajeRealY);
 
-        // 8. Comprobar zona de alarma y reproducirla una sola vez
+        // 9. Comprobar zona de alarma y reproducirla una sola vez
         gestionarAlarma(personajeRealX, personajeRealY);
 
-        // 9. Administrar sonidos de pasos/carrera
+        // 10. Administrar sonidos de pasos/carrera
         gestionarSonidosPasos(movimiento);
 
-        // 10. Actualizar enemigos y balas
+        // 11. Actualizar enemigos y balas
         gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         gestorEnemigos.verificarColisiones(gestorBalas);
 
