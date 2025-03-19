@@ -2,6 +2,7 @@ package juegoprog.elementos;
 
 import juegoprog.audio.GestorSonidos;
 import juegoprog.escenarios.ColisionesPanel;
+import juegoprog.graficos.Pantalla;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,9 +17,9 @@ public class GestorEnemigos {
 
     // Coordenadas de los puntos de respawn existentes
     private final int[][] puntosRespawn = {
-            {750, 420},       // Esquina Superior Izquierda
             {3350, 679},      // Esquina Superior Derecha
-            {840, 4285}       // Esquina Inferior Izquierda
+            {840, 4285},      // Esquina Inferior Izquierda
+            {3436, 3560}       //Esquina inferior derecha
     };
 
     /**
@@ -32,6 +33,14 @@ public class GestorEnemigos {
      * @param desplazamientoY Desplazamiento actual en el eje Y del mapa.
      */
     public void actualizar(double objetivoX, double objetivoY, ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
+
+        // ─────────────────────────────────────────────────────────────────
+        // NUEVO: Si la pantalla indica que hay cinemática, abortamos
+        // ─────────────────────────────────────────────────────────────────
+        if (pantalla != null && pantalla.isEnCinematica()) {
+            return;
+        }
+
         Iterator<Enemigo> iterator = enemigos.iterator(); // Usamos un iterador para manejar la lista
 
         // Actualizar enemigos activos
@@ -95,10 +104,21 @@ public class GestorEnemigos {
 
     private final GestorSonidos gestorSonidos;
 
+    // ─────────────────────────────────────────────────────────────────
+    // NUEVO: Pantalla para comprobar isEnCinematica()
+    // ─────────────────────────────────────────────────────────────────
+    private Pantalla pantalla;
+
     public GestorEnemigos(GestorSonidos gestorSonidos) {
         this.gestorSonidos = gestorSonidos;
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // NUEVO: Setter para asignar la pantalla
+    // ─────────────────────────────────────────────────────────────────
+    public void setPantalla(Pantalla pantalla) {
+        this.pantalla = pantalla;
+    }
 
     /**
      * Dibuja a todos los enemigos activos en el contexto gráfico.

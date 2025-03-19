@@ -24,7 +24,7 @@ public class Dial extends JPanel {
 
     /** Arreglo con la secuencia (en grados) que compone la combinación correcta.
      * Cada valor debe coincidir exactamente para avanzar de paso. */
-    private final int[] combinacion = {75, 35, 10};
+    private final int[] combinacion = {75, 190, 35};
 
     /** Índice del paso de la combinación que se está intentando resolver.
      * Si acierta un valor de 'combinacion', se incrementa. Al completarse,
@@ -185,6 +185,9 @@ public class Dial extends JPanel {
 
         ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPaper.wav");
 
+        // 🔹 MARCAR QUE LA CAJA FUERTE FUE COMPLETADA EN `FinalMision`
+        ventana.getFinalMision().setCajaFuerteCompletada(true);
+
         // Mostrar imagen de documentos
         JLabel texto = new JLabel("¡Has encontrado los documentos que buscabas!", SwingConstants.CENTER);
         texto.setFont(new Font("Arial", Font.BOLD, 25));
@@ -241,7 +244,7 @@ public class Dial extends JPanel {
         int radio = 100;
 
         // Dial circular
-        g2.setColor(Color.GRAY);
+        g2.setColor(new Color(206, 211, 196)); // Exactamente el código de color #CED3C4
         g2.fillOval(centroX - radio, centroY - radio, 2 * radio, 2 * radio);
         g2.setColor(Color.BLACK);
         g2.drawOval(centroX - radio, centroY - radio, 2 * radio, 2 * radio);

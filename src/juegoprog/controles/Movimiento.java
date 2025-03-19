@@ -1,6 +1,7 @@
 package juegoprog.controles;
 
 import juegoprog.audio.GestorSonidos;
+import juegoprog.cinematica.FinalMision;
 import juegoprog.cinematica.GestorPistas;
 import juegoprog.elementos.GestorBalas;
 import juegoprog.elementos.GestorEnemigos;
@@ -27,7 +28,6 @@ public class Movimiento extends JPanel implements ActionListener {
     private final int SCREEN_WIDTH = 1280;
     private final int SCREEN_HEIGHT = 720;
     private final int VELOCIDAD_CAMINAR = 3;  // Velocidad base
-    private final int VELOCIDAD_CORRER = 5;   // Velocidad al presionar SPACE
 
     // =========================================================================
     // 2. ATRIBUTOS DE CONTROL DE MOVIMIENTO
@@ -94,6 +94,9 @@ public class Movimiento extends JPanel implements ActionListener {
     // Para ejecutar acciones puntuales cuando se pulsa ENTER
     private Runnable eventoEnter;
 
+    // Atributo de FinalMision
+    private final FinalMision finalMision;
+
     // =========================================================================
     // 8. CONTROL DE ESTADOS (caminar, correr, alarma, etc.)
     // =========================================================================
@@ -113,7 +116,7 @@ public class Movimiento extends JPanel implements ActionListener {
      * @param personaje  Personaje controlado por el jugador.
      */
     public Movimiento(Pantalla ventana, EscenarioDistritoSombrio escenario,
-                      ColisionesPanel colisiones, Personaje personaje) {
+                      ColisionesPanel colisiones, Personaje personaje, FinalMision finalMision) {
 
         this.ventana = ventana;
         this.escenario = escenario;
@@ -121,6 +124,9 @@ public class Movimiento extends JPanel implements ActionListener {
         this.personaje = personaje;
         this.gestorPistas = ventana.getGestorPistas();
         this.gestorEnemigos = new GestorEnemigos(gestorSonidos);
+
+        // 🔹 Inicializamos FinalMision aquí dentro de Movimiento
+        this.finalMision = finalMision;
 
         setOpaque(false);
         setFocusable(true);
@@ -135,6 +141,12 @@ public class Movimiento extends JPanel implements ActionListener {
 
         // Se configuran los listeners de teclado y ratón
         configurarEventos();
+
+        // ─────────────────────────────────────────────────────────────────
+        // NUEVO: Asignar la ventana para comprobar la cinemática en GestorEnemigos
+        // ─────────────────────────────────────────────────────────────────
+        this.gestorEnemigos.setPantalla(ventana);
+
     }
 
     // =========================================================================
@@ -158,7 +170,7 @@ public class Movimiento extends JPanel implements ActionListener {
                     ventana.cambiarPantalla("MINIJUEGO_CAJA_FUERTE");
                 }
 
-                // Si hay un evento ENTER asignado, se ejecuta (p.e. mostrar pista)
+                // Si hay un evento ENTER asignado, se ejecuta (p. ej. mostrar pista)
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && eventoEnter != null) {
                     eventoEnter.run();
                     eventoEnter = null; // Evita repeticiones en bucle
@@ -212,7 +224,8 @@ public class Movimiento extends JPanel implements ActionListener {
     /** Define si el jugador camina o corre, modificando la velocidad y el estado del personaje. */
     private void ajustarVelocidad() {
         if (space) {
-            velocidad = VELOCIDAD_CORRER;
+            // Velocidad al presionar SPACE
+            velocidad = 5;
             personaje.setCorrer(true);
         } else {
             velocidad = VELOCIDAD_CAMINAR;
@@ -268,22 +281,28 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
         personaje.setPosicion(personajeRealX, personajeRealY);
 
+        System.out.println("Coordenadas del jugador: X=" + personajeRealX + ", Y=" + personajeRealY);
+
+
         // 5. Verificar pistas en la posición actual
         gestorPistas.verificarPistas(personajeRealX, personajeRealY);
 
-        // 6. Ocultar/mostrar tejados dependiendo de si el jugador está dentro de alguna casa
+        // 6 Verificar si el jugador está en la zona de escape (final del juego)
+        finalMision.verificarEscape(personajeRealX, personajeRealY);
+
+        // 7. Ocultar/mostrar tejados dependiendo de si el jugador está dentro de alguna casa
         gestionarTejados(personajeRealX, personajeRealY);
 
-        // 7. Comprobar zona de minijuego (caja fuerte)
+        // 8. Comprobar zona de minijuego (caja fuerte)
         gestionarMinijuegoCajaFuerte(personajeRealX, personajeRealY);
 
-        // 8. Comprobar zona de alarma y reproducirla una sola vez
+        // 9. Comprobar zona de alarma y reproducirla una sola vez
         gestionarAlarma(personajeRealX, personajeRealY);
 
-        // 9. Administrar sonidos de pasos/carrera
+        // 10. Administrar sonidos de pasos/carrera
         gestionarSonidosPasos(movimiento);
 
-        // 10. Actualizar enemigos y balas
+        // 11. Actualizar enemigos y balas
         gestorEnemigos.actualizar(personaje.getX(), personaje.getY(), colisiones, desplazamientoX, desplazamientoY);
         gestorEnemigos.verificarColisiones(gestorBalas);
 
@@ -306,11 +325,7 @@ public class Movimiento extends JPanel implements ActionListener {
         Rectangle casa1 = new Rectangle(1787, 1865, 463, 756);
         Rectangle casa2 = new Rectangle(2567, 2785, 516, 1084);
 
-        if (casa1.contains(x, y) || casa2.contains(x, y)) {
-            mostrarTejados = false;
-        } else {
-            mostrarTejados = true;
-        }
+        mostrarTejados = !casa1.contains(x, y) && !casa2.contains(x, y);
     }
 
     /** Si el jugador está cerca de la caja fuerte, se muestra un mensaje para entrar al minijuego. */
@@ -350,7 +365,8 @@ public class Movimiento extends JPanel implements ActionListener {
             // Movimiento en x o y distinto de 0 => se está desplazando
             if (space) { // Correr
                 if (!estaCorriendo) {
-                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+                    gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav"); // Aseguramos detener el otro
                     gestorSonidos.reproducirBucle("/audio/NoirRun.wav");
                     estaCorriendo = true;
                     estaCaminando = false;
@@ -358,6 +374,7 @@ public class Movimiento extends JPanel implements ActionListener {
             } else { // Caminar
                 if (!estaCaminando) {
                     gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+                    gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
                     gestorSonidos.reproducirBucle("/audio/NoirStep3b.wav");
                     estaCaminando = true;
                     estaCorriendo = false;
@@ -450,6 +467,38 @@ public class Movimiento extends JPanel implements ActionListener {
         );
     }
 
+    public void reiniciarDesplazamiento(int posicionInicialX, int posicionInicialY) {
+        // Calcula el desplazamiento para alinear la pantalla con las coordenadas iniciales del personaje
+        desplazamientoX = posicionInicialX - (SCREEN_WIDTH / 2);
+        desplazamientoY = posicionInicialY - (SCREEN_HEIGHT / 2);
+
+        // Asegurarse de que la posición del personaje se alinea con el desplazamiento
+        personaje.setX(posicionInicialX);
+        personaje.setY(posicionInicialY);
+
+        // Actualiza el desplazamiento del escenario y las colisiones
+        escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY);
+        colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
+    }
+    public void reiniciarTeclas() {
+        // Resetear todas las teclas a su estado "no presionado"
+        up = false;
+        down = false;
+        left = false;
+        right = false;
+        space = false;
+
+        // Anula los sonidos de pasos o carrera si estaban activos
+        estaCaminando = false;
+        estaCorriendo = false;
+        gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+        gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+
+        System.out.println("[DEBUG] Teclas de movimiento reiniciadas.");
+    }
+
+
+
     // =========================================================================
     // 15. PINTADO DEL PERSONAJE Y DEMÁS ELEMENTOS EN PANTALLA
     // =========================================================================
@@ -484,7 +533,7 @@ public class Movimiento extends JPanel implements ActionListener {
             g.drawString("Pulsa ENTER para abrir la caja fuerte", SCREEN_WIDTH / 2 - 150, 50);
         }
         if (mostrarMensajePista) {
-            g.drawString("Pulsa ENTER para inspeccionar", SCREEN_WIDTH / 2 - 150, 80);
+            g.drawString("Pulsa ENTER para echar un vistazo", SCREEN_WIDTH / 2 - 150, 80);
         }
     }
 
@@ -527,18 +576,13 @@ public class Movimiento extends JPanel implements ActionListener {
         this.mostrarMensajePista = mostrar;
     }
 
-    /** Para consultar el estado del mensaje de pista. */
-    public boolean isMostrarMensajePista() {
-        return mostrarMensajePista;
-    }
-
     /** Agrega una acción que se ejecutará cuando se presione ENTER. */
     public void agregarEventoEnter(Runnable accion) {
         this.eventoEnter = accion;
     }
 
     // =========================================================================
-    // 17. MÉTODO DE LA INTERFAZ ActionListener (SI SE NECESITA)
+    // 17. METODO DE LA INTERFAZ ActionListener (SI SE NECESITA)
     // =========================================================================
 
     @Override

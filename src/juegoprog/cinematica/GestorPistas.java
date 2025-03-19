@@ -1,5 +1,7 @@
 package juegoprog.cinematica;
 
+import juegoprog.elementos.Enemigo;
+import juegoprog.elementos.GestorEnemigos;
 import juegoprog.graficos.Pantalla;
 import javax.swing.*;
 import java.awt.*;
@@ -7,6 +9,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class GestorPistas {
     private final Pantalla ventana;
@@ -14,16 +17,39 @@ public class GestorPistas {
     private String pistaActual = null; // Guarda la pista en la que estamos
     private final Map<String, Pista> pistas = new HashMap<>();
     private final Map<String, Boolean> pistasVistas = new HashMap<>(); // Controla qué pistas ya fueron vistas
+    private final GestorEnemigos gestorEnemigos; // Referencia al GestorEnemigos
+
 
     // 🔹 Constructor
-    public GestorPistas(Pantalla ventana) {
+    public GestorPistas(Pantalla ventana,GestorEnemigos gestorEnemigos) {
         this.ventana = ventana;
+        this.gestorEnemigos= gestorEnemigos;
+
 
         // 🔹 Definir las pistas con coordenadas e imágenes
+
+        // ──────—─────── PISTA UNO: 76 ──────────────
+
         pistas.put("76", new Pista(
                 new Rectangle(1930, 3125, 198, 129),
                 new String[]{"/resources/pistas/76A.png", "/resources/pistas/76B.png"}
         ));
+
+        // ────────—───── NUEVA PISTA AÑADIDA: SEGUNDA 190 ──────────────
+
+        pistas.put("190", new Pista(
+                new Rectangle(2823, 1283, 251, 228),
+                new String[]{"/resources/pistas/190A.png", "/resources/pistas/190B.png", "/resources/pistas/190C.png"}
+        ));
+        // ──────────────────────────────────────────────────
+
+        // ────────────── NUEVA PISTA: TERCERA 35 ──────────────
+        pistas.put("35", new Pista(
+                new Rectangle(2689, 3079, 204, 90), // Coordenadas basadas en los datos proporcionados
+                new String[]{"/resources/pistas/35A.png", "/resources/pistas/35B.png", "/resources/pistas/35C.png"}
+        ));
+// ───────────────────────────────────────────────────
+
 
         // 🔹 Inicializar el mapa de pistas vistas (todas comienzan como no vistas)
         for (String clave : pistas.keySet()) {
@@ -63,6 +89,10 @@ public class GestorPistas {
         pistaActual = clave;
         pistasVistas.put(clave, true); // Marcar como vista para que no se repita
 
+        // Detener a los enemigos al entrar en una pista
+        detenerEnemigos();
+
+
         JFrame pistaVentana = new JFrame();
         pistaVentana.setUndecorated(true);
         pistaVentana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -70,7 +100,11 @@ public class GestorPistas {
         pistaVentana.setLocationRelativeTo(null);
 
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel(new ImageIcon(getClass().getResource(imagenes[0])));
+        JLabel label = new JLabel(new ImageIcon(Objects.requireNonNull(getClass().getResource(imagenes[0]))));
+
+        // 🔹 Reproducimos sonido al mostrar la primera imagen
+        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPista.wav");
+
         panel.add(label, BorderLayout.CENTER);
 
         JLabel texto = new JLabel("Pulsa ENTER para continuar", SwingConstants.CENTER);
@@ -89,7 +123,7 @@ public class GestorPistas {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && indiceImagen < imagenes.length - 1) {
                     // 🔹 Cambia a la siguiente imagen si hay más de una
                     indiceImagen++;
-                    label.setIcon(new ImageIcon(getClass().getResource(imagenes[indiceImagen])));
+                    label.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(imagenes[indiceImagen]))));
 
                     // 🔹 Cambia el mensaje cuando sea la última imagen
                     if (indiceImagen == imagenes.length - 1) {
@@ -99,6 +133,7 @@ public class GestorPistas {
                     // 🔹 Cierra la pista y permite volver al juego
                     enPista = false;
                     pistaActual = null;
+                    reanudarEnemigos();
                     pistaVentana.dispose();
                 }
             }
@@ -117,4 +152,19 @@ public class GestorPistas {
             this.imagenes = imagenes;
         }
     }
+    // Metodo para detener todos los enemigos usando GestorEnemigos
+    private void detenerEnemigos() {
+        for (Enemigo enemigo : gestorEnemigos.getEnemigos()) {
+            enemigo.detener(); // Llamamos al metodo detener() del enemigo
+        }
+    }
+
+    // Metodo para reanudar todos los enemigos usando GestorEnemigos
+    private void reanudarEnemigos() {
+        for (Enemigo enemigo : gestorEnemigos.getEnemigos()) {
+            enemigo.reanudar(); // Volvemos a habilitar el movimiento
+        }
+    }
+
+
 }

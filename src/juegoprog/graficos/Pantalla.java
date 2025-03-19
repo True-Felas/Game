@@ -3,7 +3,10 @@ package juegoprog.graficos;
 import juegoprog.audio.GestorMusica;
 import juegoprog.audio.GestorSonidos;
 import juegoprog.cinematica.Cinematica;
+import juegoprog.cinematica.FinalMision;
 import juegoprog.cinematica.GestorPistas;
+import juegoprog.elementos.Dial;
+import juegoprog.elementos.Enemigo;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
@@ -39,6 +42,20 @@ public class Pantalla extends JFrame {
     private Image tejados;                       // Imagen de los tejados del escenario
     private GestorPistas gestorPistas;           // Gestiona pistas (investigación / recolección)
 
+    private PanelVidas panelVidas;
+
+    private Personaje personaje; // Personaje principal
+
+    private boolean partidaTerminada = false; // Bandera para saber si la partida terminó
+
+    private boolean bucleEnEjecucion = true;
+
+    private GestorEnemigos gestorEnemigos; // Añade esta variable
+
+    // Pantalla final del juego antes de regresar al menú.
+    private FinalMision finalMision;
+
+
     // =========================================================================
     // 2. CONSTRUCTOR Y CONFIGURACIÓN INICIAL
     // =========================================================================
@@ -69,7 +86,7 @@ public class Pantalla extends JFrame {
         setContentPane(contenedorPrincipal);
 
         // Creamos de una vez el gestor de pistas (ligado a esta ventana)
-        gestorPistas = new GestorPistas(this);
+        gestorPistas = new GestorPistas(this, gestorEnemigos);
 
         // ---------------------------------------------------------------------
         // 2.3 Agregar la pantalla del Menú principal
@@ -93,10 +110,10 @@ public class Pantalla extends JFrame {
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
         // Personaje principal
-        Personaje personaje = new Personaje();
-
+        personaje = new Personaje();
+        finalMision = new FinalMision(this);
         // Control de movimiento (manejador de la lógica principal del juego)
-        movimiento = new Movimiento(this, escenario, colisiones, personaje);
+        movimiento = new Movimiento(this, escenario, colisiones, personaje, finalMision);
         movimiento.setBounds(0, 0, 1280, 720);
         capaJuego.add(movimiento, JLayeredPane.MODAL_LAYER);
 
@@ -105,13 +122,18 @@ public class Pantalla extends JFrame {
         minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236);
         capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Se coloca por encima de las capas base
 
+        // Crear el panel de vidas
+        panelVidas = new PanelVidas(3, "/resources/graficos/Vida2.png"); // Inicia con 3 vidas
+        panelVidas.setBounds(0, 0, 200, 100); // Colocarlo en la esquina superior izquierda
+        capaJuego.add(panelVidas, JLayeredPane.POPUP_LAYER);
+
         // Agregar esta "pantalla de juego" al CardLayout
         contenedorPrincipal.add(capaJuego, "JUEGO");
 
         // ---------------------------------------------------------------------
         // 2.5 Registrar el minijuego de la caja fuerte en el CardLayout
         // ---------------------------------------------------------------------
-        contenedorPrincipal.add(new juegoprog.elementos.Dial(this), "MINIJUEGO_CAJA_FUERTE");
+        contenedorPrincipal.add(new Dial(this), "MINIJUEGO_CAJA_FUERTE");
 
         // ---------------------------------------------------------------------
         // 2.6 Cargar la imagen de tejados y el gestor de música/sonidos
@@ -119,6 +141,9 @@ public class Pantalla extends JFrame {
         tejados = new ImageIcon(Objects.requireNonNull(
                 getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))
         ).getImage();
+
+
+
 
         gestorMusica = new GestorMusica();
         gestorSonidos = new GestorSonidos(); // Inicializamos aquí para evitar null
@@ -178,7 +203,7 @@ public class Pantalla extends JFrame {
             final int fps = 60;
             final long frameTime = 1_000_000_000L / fps; // nanos
 
-            while (true) {
+            while (bucleEnEjecucion) {
                 long startTime = System.nanoTime();
 
                 // Actualiza la lógica del juego
@@ -212,12 +237,49 @@ public class Pantalla extends JFrame {
      *  - Calcula y actualiza los FPS.
      */
     private void actualizar() {
-        // 🔹 Solo mover al jugador si NO estamos en cinemática
+        // No realiza lógica si la partida ya ha terminado
+        if (partidaTerminada) {
+            return;
+        }
+
+        // Solo actualiza si no estamos en cinemática
         if (!enCinematica) {
             movimiento.moverJugador();
+
+            // Verificar las colisiones entre enemigos y el personaje
+            for (Enemigo enemigo : GestorEnemigos.getEnemigos()) {
+                enemigo.verificarColision(personaje);
+            }
+
+            // Actualizar el panel de vidas si la vida del personaje cambia
+            panelVidas.actualizarVidas(personaje.getVida());
+
+            // Verificar si las vidas llegaron a 0
+            if (personaje.getVida() <= 0) {
+                terminarPartida();
+            }
         }
 
         calcularYActualizarFPS();
+    }
+
+    private void terminarPartida() {
+        // Reiniciar las teclas para que el movimiento no continúe al reaparecer
+        movimiento.reiniciarTeclas();
+        // Mostrar mensaje al jugador
+        JOptionPane.showMessageDialog(this, "Has perdido todas las vidas. ¡Volverás a intentarlo desde el inicio!", "Vida perdida", JOptionPane.INFORMATION_MESSAGE);
+
+
+        // Reiniciar desplazamiento de la pantalla
+        movimiento.reiniciarDesplazamiento(1280, 720);
+
+
+        // Restablecer la salud y vidas del personaje
+        personaje.setVida(4); // Salud inicial
+
+// 🔹 REINICIAR EL ESTADO DE LA CAJA FUERTE PARA QUE NO SE GUARDE AL MORIR
+        finalMision.setCajaFuerteCompletada(false);
+
     }
 
     // =========================================================================
@@ -238,7 +300,7 @@ public class Pantalla extends JFrame {
             lastTime = currentTime;
 
             SwingUtilities.invokeLater(() ->
-                    setTitle("Juego - FPS: " + String.format("%.2f", fps))
+                    setTitle("NOIR CITY - FPS: " + String.format("%.2f", fps))
             );
         }
     }
@@ -249,7 +311,7 @@ public class Pantalla extends JFrame {
 
     /**
      * Indica si la cinemática está en curso (true). Si es true,
-     * se pausa la lógica del juego en el método actualizar().
+     * se pausa la lógica del juego en el metodo actualizar().
      */
     private boolean enCinematica = false;
 
@@ -286,13 +348,7 @@ public class Pantalla extends JFrame {
         return gestorPistas;
     }
 
-    /** Método 'placeholder' si se necesita en otros componentes */
-    public void mostrarImagenPista(String[] imagenes, Object o) {
-        // Actualmente sin implementación
-    }
+    public FinalMision getFinalMision() { return finalMision; }
 
-    /** Agrega un evento que se disparará cuando se presione ENTER. */
-    public void setEventoEnter(Runnable accion) {
-        movimiento.agregarEventoEnter(accion);
-    }
+
 }
