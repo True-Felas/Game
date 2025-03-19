@@ -9,22 +9,37 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GestorEnemigos {
-    private static final List<Enemigo> enemigos = new ArrayList<>(); // Lista de enemigos activos
-    private static final int MAX_ENEMIGOS = 20; // Máximo de enemigos activos
-    private final Random random = new Random(); // Generador de números aleatorios
+    private static final List<Enemigo> enemigos = new CopyOnWriteArrayList<>(); // Lista concurrente segura para iteraciones.
+    private static final int MAX_ENEMIGOS = 20; // Máximo número de enemigos simultáneos
+    private final Random random = new Random();
 
     // Coordenadas de los puntos de respawn existentes
     private final int[][] puntosRespawn = {
             {3350, 679},      // Esquina Superior Derecha
             {840, 4285},      // Esquina Inferior Izquierda
-            {3436, 3560}       //Esquina inferior derecha
+            {3436, 3560}      // Esquina Inferior Derecha
     };
 
+    private final GestorSonidos gestorSonidos;
+
+    // NUEVO: Pantalla para comprobar si hay cinemática
+    private Pantalla pantalla;
+
+    public GestorEnemigos(GestorSonidos gestorSonidos) {
+        this.gestorSonidos = gestorSonidos;
+    }
+
+    // ------ Establecer pantalla ------
+    public void setPantalla(Pantalla pantalla) {
+        this.pantalla = pantalla;
+    }
+
     /**
-     * Actualiza la posición y el estado de todos los enemigos activos y genera nuevos
-     * enemigos en puntos de respawn aleatorios hasta el máximo definido.
+     * Actualiza la posición y el estado de todos los enemigos activos,
+     * y genera nuevos enemigos en puntos de respawn aleatorios hasta el máximo definido.
      *
      * @param objetivoX       Coordenada X del personaje principal.
      * @param objetivoY       Coordenada Y del personaje principal.
@@ -32,33 +47,24 @@ public class GestorEnemigos {
      * @param desplazamientoX Desplazamiento actual en el eje X del mapa.
      * @param desplazamientoY Desplazamiento actual en el eje Y del mapa.
      */
-    public void actualizar(double objetivoX, double objetivoY, ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
-
-        // ─────────────────────────────────────────────────────────────────
-        // NUEVO: Si la pantalla indica que hay cinemática, abortamos
-        // ─────────────────────────────────────────────────────────────────
+    public void actualizar(double objetivoX, double objetivoY, ColisionesPanel colisiones,
+                           int desplazamientoX, int desplazamientoY) {
         if (pantalla != null && pantalla.isEnCinematica()) {
             return;
         }
 
-        Iterator<Enemigo> iterator = enemigos.iterator(); // Usamos un iterador para manejar la lista
-
-        // Actualizar enemigos activos
-        while (iterator.hasNext()) {
-            Enemigo enemigo = iterator.next();
+        // Iterar sobre enemigos de forma segura
+        for (Enemigo enemigo : enemigos) {
             if (enemigo.isActivo()) {
                 enemigo.moverHacia(objetivoX, objetivoY, colisiones, desplazamientoX, desplazamientoY);
             } else {
-                // Si el enemigo no está activo (muerto), lo eliminamos de la lista
-                iterator.remove();
+                enemigos.remove(enemigo); // No hay problema al eliminar en CopyOnWriteArrayList
             }
         }
 
-        // Generar nuevos enemigos para alcanzar el máximo permitido
         while (enemigos.size() < MAX_ENEMIGOS) {
-            int[] respawn = puntosRespawn[random.nextInt(puntosRespawn.length)]; // Elegir punto de respawn
-            Enemigo nuevoEnemigo = new Enemigo(gestorSonidos, respawn[0], respawn[1]); // 🔹 Ahora pasamos gestorSonidos
-            enemigos.add(nuevoEnemigo);
+            int[] respawn = puntosRespawn[random.nextInt(puntosRespawn.length)];
+            enemigos.add(new Enemigo(gestorSonidos, respawn[0], respawn[1]));
         }
     }
 
@@ -68,78 +74,45 @@ public class GestorEnemigos {
      * @param gestorBalas Gestor de balas.
      */
     public void verificarColisiones(GestorBalas gestorBalas) {
-        // Utilizamos un Iterator para evitar cambios concurrentes durante la iteración
-        Iterator<Enemigo> iterador = enemigos.iterator();
+        synchronized (enemigos) { // Bloque sincronizado
+            Iterator<Enemigo> iterador = enemigos.iterator();
 
-        while (iterador.hasNext()) {
-            Enemigo enemigo = iterador.next(); // Obtenemos el siguiente enemigo
+            while (iterador.hasNext()) {
+                Enemigo enemigo = iterador.next();
 
-            if (!enemigo.isActivo()) {
-                // Si está inactivo, lo eliminamos
-                iterador.remove();
-                continue;
-            }
+                if (!enemigo.isActivo()) {
+                    iterador.remove(); // Eliminamos enemigos inactivos
+                    continue;
+                }
 
-            // Verifica colisiones con las balas
-            gestorBalas.getBalas().forEach(bala -> {
-                if (enemigo.colisionaCon(bala.getX(), bala.getY())) {
-                    enemigo.recibirDano();
-                    bala.desactivar();
+                // Verificar colisiones con las balas
+                gestorBalas.getBalas().forEach(bala -> {
+                    if (enemigo.colisionaCon(bala.getX(), bala.getY())) {
+                        enemigo.recibirDano();
+                        bala.desactivar();
 
-                    // Si el enemigo muere, lo marcamos como inactivo y reproducimos un sonido aleatorio (o ninguno)
-                    if (!enemigo.isActivo()) {
-                        enemigo.desactivar();
-
-                        // 🔹 Generar un número aleatorio entre 0 y 4 (5 opciones: 4 sonidos y 1 silencio)
-                        int opcion = new Random().nextInt(5); // 0, 1, 2, 3 o 4
-
-                        String sonidoMuerte = switch (opcion) {
-                            case 0 -> "/audio/NoirDeathA.wav";
-                            case 1 -> "/audio/NoirDeathB.wav";
-                            case 2 -> "/audio/NoirDeathC.wav";
-                            case 3 -> "/audio/NoirDeathD.wav";
-                            default -> null; // 🔹 Caso 4: No reproducir sonido
-                        };
-
-                        // 🔹 Si no es null, reproducir sonido
-                        if (sonidoMuerte != null) {
-                            gestorSonidos.reproducirEfecto(sonidoMuerte);
+                        if (!enemigo.isActivo()) {
+                            enemigo.desactivar();
+                            reproducirSonidoMuerte();
                         }
                     }
-                }
-            });
+                });
+            }
         }
-    }
-
-
-    private final GestorSonidos gestorSonidos;
-
-    // ─────────────────────────────────────────────────────────────────
-    // NUEVO: Pantalla para comprobar isEnCinematica()
-    // ─────────────────────────────────────────────────────────────────
-    private Pantalla pantalla;
-
-    public GestorEnemigos(GestorSonidos gestorSonidos) {
-        this.gestorSonidos = gestorSonidos;
-    }
-
-    // ─────────────────────────────────────────────────────────────────
-    // NUEVO: Setter para asignar la pantalla
-    // ─────────────────────────────────────────────────────────────────
-    public void setPantalla(Pantalla pantalla) {
-        this.pantalla = pantalla;
     }
 
     /**
      * Dibuja a todos los enemigos activos en el contexto gráfico.
      *
-     * @param g              Contexto gráfico.
-     * @param desplazamientoX Desplazamiento en el eje X.
-     * @param desplazamientoY Desplazamiento en el eje Y.
+     * @param g               Contexto gráfico.
+     * @param desplazamientoX Desplazamiento actual en el eje X del mapa.
+     * @param desplazamientoY Desplazamiento actual en el eje Y del mapa.
      */
     public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
-        for (Enemigo enemigo : enemigos) {
-            enemigo.dibujar(g, desplazamientoX, desplazamientoY);
+        synchronized (enemigos) { // Bloque sincronizado
+            for (Enemigo enemigo : enemigos) {
+                enemigo.dibujar(g, desplazamientoX, desplazamientoY);
+            }
         }
     }
 
@@ -149,15 +122,37 @@ public class GestorEnemigos {
      * @return Verdadero si no queda ningún enemigo activo.
      */
     public boolean enemigosEliminados() {
-        return enemigos.stream().noneMatch(Enemigo::isActivo); // Usamos streams para verificar si queda algún enemigo activo
+        synchronized (enemigos) { // Bloque sincronizado
+            return enemigos.stream().noneMatch(Enemigo::isActivo);
+        }
     }
 
     /**
-     * Devuelve la lista de enemigos activos.
+     * Devuelve una copia de la lista de enemigos activos.
      *
      * @return Lista de enemigos activos.
      */
     public static List<Enemigo> getEnemigos() {
-        return new ArrayList<>(enemigos); // Devuelve una copia de la lista para evitar modificaciones externas
+        synchronized (enemigos) { // Bloque sincronizado
+            return new ArrayList<>(enemigos); // Devolver una copia para asegurar la inmutabilidad
+        }
+    }
+
+    // ------ Metodo para reproducir un sonido de muerte aleatorio ------
+    private void reproducirSonidoMuerte() {
+        // Selección aleatoria entre 5 opciones (4 sonidos + silencio)
+        int opcion = new Random().nextInt(5);
+        String sonidoMuerte = switch (opcion) {
+            case 0 -> "/audio/NoirDeathA.wav";
+            case 1 -> "/audio/NoirDeathB.wav";
+            case 2 -> "/audio/NoirDeathC.wav";
+            case 3 -> "/audio/NoirDeathD.wav";
+            default -> null;
+        };
+
+        // Si el sonido no es nulo, reproducimos el efecto
+        if (sonidoMuerte != null) {
+            gestorSonidos.reproducirEfecto(sonidoMuerte);
+        }
     }
 }

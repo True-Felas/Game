@@ -16,6 +16,7 @@ import juegoprog.controles.Movimiento;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Iterator;
 import java.util.Objects;
 
 /**
@@ -247,8 +248,19 @@ public class Pantalla extends JFrame {
             movimiento.moverJugador();
 
             // Verificar las colisiones entre enemigos y el personaje
-            for (Enemigo enemigo : GestorEnemigos.getEnemigos()) {
-                enemigo.verificarColision(personaje);
+            // Usamos un iterador en lugar de for-each para evitar ConcurrentModificationException
+            synchronized (GestorEnemigos.getEnemigos()) { // Bloque sincronizado
+                Iterator<Enemigo> iterador = GestorEnemigos.getEnemigos().iterator();
+
+                while (iterador.hasNext()) {
+                    Enemigo enemigo = iterador.next();
+                    enemigo.verificarColision(personaje);
+
+                    // Si se desea eliminar/modificar enemigos, esto debe hacerse con el iterador
+                    if (!enemigo.isActivo()) {
+                        iterador.remove();
+                    }
+                }
             }
 
             // Actualizar el panel de vidas si la vida del personaje cambia
@@ -264,11 +276,11 @@ public class Pantalla extends JFrame {
     }
 
     private void terminarPartida() {
-        // Reiniciar las teclas para que el movimiento no continúe al reaparecer
-        movimiento.reiniciarTeclas();
+
         // Mostrar mensaje al jugador
         JOptionPane.showMessageDialog(this, "Has perdido todas las vidas. ¡Volverás a intentarlo desde el inicio!", "Vida perdida", JOptionPane.INFORMATION_MESSAGE);
-
+        // Reiniciar las teclas para que el movimiento no continúe al reaparecer
+        movimiento.reiniciarTeclas();
 
         // Reiniciar desplazamiento de la pantalla
         movimiento.reiniciarDesplazamiento(1280, 720);
