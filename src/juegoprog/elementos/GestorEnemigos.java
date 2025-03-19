@@ -68,9 +68,19 @@ public class GestorEnemigos {
      * @param gestorBalas Gestor de balas.
      */
     public void verificarColisiones(GestorBalas gestorBalas) {
-        for (Enemigo enemigo : enemigos) {
-            if (!enemigo.isActivo()) continue;
+        // Utilizamos un Iterator para evitar cambios concurrentes durante la iteración
+        Iterator<Enemigo> iterador = enemigos.iterator();
 
+        while (iterador.hasNext()) {
+            Enemigo enemigo = iterador.next(); // Obtenemos el siguiente enemigo
+
+            if (!enemigo.isActivo()) {
+                // Si está inactivo, lo eliminamos
+                iterador.remove();
+                continue;
+            }
+
+            // Verifica colisiones con las balas
             gestorBalas.getBalas().forEach(bala -> {
                 if (enemigo.colisionaCon(bala.getX(), bala.getY())) {
                     enemigo.recibirDano();
