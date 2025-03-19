@@ -14,7 +14,7 @@ public abstract class BaseEscenario extends JPanel { // 🔹 Ahora hereda de JPa
     }
 
     @Override
-    protected void paintComponent(Graphics g) {  // ✅ Método correcto para dibujar en JPanel
+    protected void paintComponent(Graphics g) {  // ✅ Metodo correcto para dibujar en JPanel
         super.paintComponent(g);
     }
 

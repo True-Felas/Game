@@ -257,16 +257,22 @@ public class Pantalla extends JFrame {
 
 
     private void terminarPartida() {
+        // Reiniciar las teclas para que el movimiento no continúe al reaparecer
+        movimiento.reiniciarTeclas();
         // Mostrar mensaje al jugador
-        JOptionPane.showMessageDialog(this, "¡Has perdido! El juego se cerrará.", "Fin de la partida", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, "Has perdido todas las vidas. ¡Volverás a intentarlo desde el inicio!", "Vida perdida", JOptionPane.INFORMATION_MESSAGE);
 
-        // Cierra la ventana actual
-        this.dispose(); // Cierra la ventana actual y libera recursos asociados
 
-        // Salir del programa de manera limpia
-        System.exit(0);
+        // Reiniciar desplazamiento de la pantalla
+        movimiento.reiniciarDesplazamiento(1280, 720);
+
+
+        // Restablecer la salud y vidas del personaje
+        personaje.setVida(3); // Salud inicial
+
 
     }
+
 
 
 
@@ -303,7 +309,7 @@ public class Pantalla extends JFrame {
 
     /**
      * Indica si la cinemática está en curso (true). Si es true,
-     * se pausa la lógica del juego en el método actualizar().
+     * se pausa la lógica del juego en el metodo actualizar().
      */
     private boolean enCinematica = false;
 
@@ -338,15 +344,5 @@ public class Pantalla extends JFrame {
 
     public GestorPistas getGestorPistas() {
         return gestorPistas;
-    }
-
-    /** Metodo 'placeholder' si se necesita en otros componentes */
-    public void mostrarImagenPista(String[] imagenes, Object o) {
-        // Actualmente sin implementación
-    }
-
-    /** Agrega un evento que se disparará cuando se presione ENTER. */
-    public void setEventoEnter(Runnable accion) {
-        movimiento.agregarEventoEnter(accion);
     }
 }

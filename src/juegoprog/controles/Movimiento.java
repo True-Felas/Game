@@ -456,6 +456,38 @@ public class Movimiento extends JPanel implements ActionListener {
         );
     }
 
+    public void reiniciarDesplazamiento(int posicionInicialX, int posicionInicialY) {
+        // Calcula el desplazamiento para alinear la pantalla con las coordenadas iniciales del personaje
+        desplazamientoX = posicionInicialX - (SCREEN_WIDTH / 2);
+        desplazamientoY = posicionInicialY - (SCREEN_HEIGHT / 2);
+
+        // Asegurarse de que la posición del personaje se alinea con el desplazamiento
+        personaje.setX(posicionInicialX);
+        personaje.setY(posicionInicialY);
+
+        // Actualiza el desplazamiento del escenario y las colisiones
+        escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY);
+        colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
+    }
+    public void reiniciarTeclas() {
+        // Resetear todas las teclas a su estado "no presionado"
+        up = false;
+        down = false;
+        left = false;
+        right = false;
+        space = false;
+
+        // Anula los sonidos de pasos o carrera si estaban activos
+        estaCaminando = false;
+        estaCorriendo = false;
+        gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
+        gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+
+        System.out.println("[DEBUG] Teclas de movimiento reiniciadas.");
+    }
+
+
+
     // =========================================================================
     // 15. PINTADO DEL PERSONAJE Y DEMÁS ELEMENTOS EN PANTALLA
     // =========================================================================
