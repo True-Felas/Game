@@ -34,6 +34,34 @@ public class GestorMusica {
         }
     }
 
+    /** Reproduce varios archivos enlazados de música en bucle. */
+    public void reproducirMusicaSecuencial(String rutaIntro, String rutaLoop) {
+        detenerMusica(); // Asegurar que no haya música previa
+
+        try {
+            URL urlIntro = getClass().getResource(rutaIntro);
+            if (urlIntro == null) {
+                System.err.println("❌ Archivo de música no encontrado: " + rutaIntro);
+                return;
+            }
+
+            Clip clipIntro = AudioSystem.getClip();
+            clipIntro.open(AudioSystem.getAudioInputStream(urlIntro));
+            clipIntro.start();
+
+            // Cuando termina la primera canción, empieza la segunda en bucle
+            clipIntro.addLineListener(event -> {
+                if (event.getType() == LineEvent.Type.STOP) {
+                    detenerMusica(); // Detener la música anterior
+                    reproducirMusica(rutaLoop); // Iniciar la versión sin locución en bucle
+                }
+            });
+
+        } catch (Exception e) {
+            System.err.println("❌ Error al cargar la música: " + e.getMessage());
+        }
+    }
+
     /** Detiene la música inmediatamente. */
 
     public void detenerMusica() {

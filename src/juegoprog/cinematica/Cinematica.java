@@ -40,8 +40,11 @@ public class Cinematica extends JPanel implements ActionListener {
 
         cargarImagenes();
 
-        // Reproducir música (puedes quitarlo si no lo usas)
-        ventana.getGestorMusica().reproducirMusica("/resources/audio/Noir City - Find Me Again & Tension.wav");
+        ventana.getGestorMusica().reproducirMusicaSecuencial(
+                "/resources/audio/Noir City - Find Me Again & Tension Intro.wav",
+                "/resources/audio/Noir City - Find Me Again & Tension Loop.wav"
+        );
+
 
         // Timer que actualiza la animación ~ 25 FPS (cada 40 ms)
         timer = new Timer(40, this);
