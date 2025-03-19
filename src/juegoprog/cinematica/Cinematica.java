@@ -45,7 +45,6 @@ public class Cinematica extends JPanel implements ActionListener {
                 "/resources/audio/Noir City - Find Me Again & Tension Loop.wav"
         );
 
-
         // Timer que actualiza la animación ~ 25 FPS (cada 40 ms)
         timer = new Timer(40, this);
         timer.start();
