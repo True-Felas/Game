@@ -141,8 +141,7 @@ public class Pantalla extends JFrame {
         // 2.6 Cargar la imagen de tejados y el gestor de música/sonidos
         // ---------------------------------------------------------------------
         tejados = new ImageIcon(Objects.requireNonNull(
-                getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))
-        ).getImage();
+                getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))).getImage();
 
 
 

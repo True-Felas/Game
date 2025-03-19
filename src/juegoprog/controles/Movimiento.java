@@ -511,20 +511,22 @@ public class Movimiento extends JPanel implements ActionListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        // 1. Dibujar tejados si están activos
+
+
+        // 1. Dibujar mensajes de minijuego y pistas
+        dibujarMensajes(g);
+
+        // 2. Dibujar personaje con rotación
+        dibujarPersonaje(g2d);
+
+        // 3. Dibujar balas y enemigos
+        gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
+        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY);
+
+        // 4. Dibujar tejados si están activos
         if (mostrarTejados) {
             g.drawImage(ventana.getTejados(), -desplazamientoX, -desplazamientoY, null);
         }
-
-        // 2. Dibujar mensajes de minijuego y pistas
-        dibujarMensajes(g);
-
-        // 3. Dibujar personaje con rotación
-        dibujarPersonaje(g2d);
-
-        // 4. Dibujar balas y enemigos
-        gestorBalas.dibujar(g, desplazamientoX, desplazamientoY);
-        gestorEnemigos.dibujar(g, desplazamientoX, desplazamientoY);
     }
 
     /** Muestra los textos en pantalla de “Pulsa ENTER...” para minijuego y pistas. */
