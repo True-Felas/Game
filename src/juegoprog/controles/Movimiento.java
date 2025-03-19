@@ -533,7 +533,7 @@ public class Movimiento extends JPanel implements ActionListener {
             g.drawString("Pulsa ENTER para abrir la caja fuerte", SCREEN_WIDTH / 2 - 150, 50);
         }
         if (mostrarMensajePista) {
-            g.drawString("Pulsa ENTER para inspeccionar", SCREEN_WIDTH / 2 - 150, 80);
+            g.drawString("Pulsa ENTER para echar un vistazo", SCREEN_WIDTH / 2 - 150, 80);
         }
     }
 

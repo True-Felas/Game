@@ -46,7 +46,7 @@ public class FinalMision {
         JLabel label = new JLabel(new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/cinematicas/mision_completada.png"))));
 
         panel.add(label, BorderLayout.CENTER);
-        JLabel texto = new JLabel("Pulsa ESCAPE para terminar la misión", SwingConstants.CENTER);
+        JLabel texto = new JLabel("Pulsa ESCAPE para salir", SwingConstants.CENTER);
         texto.setFont(new Font("Arial", Font.BOLD, 24));
         texto.setForeground(Color.WHITE);
         panel.add(texto, BorderLayout.NORTH);
