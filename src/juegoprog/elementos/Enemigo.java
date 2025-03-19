@@ -173,8 +173,13 @@ public class Enemigo {
         }
     }
 
-    // Metodo que verifica cuando el enemigo está en colisión con el personaje
+    // Este método controla las colisiones entre el enemigo y el personaje
     public void verificarColision(Personaje personaje) {
+        if (!activo) { // Si el enemigo no está activo (muerto), detén el temporizador
+            detenerTemporizadorDanio();
+            return;
+        }
+
         // Coordenadas del enemigo
         int enemigoX = (int) x;
         int enemigoY = (int) y;
@@ -190,39 +195,53 @@ public class Enemigo {
 
         // Si el enemigo está en contacto (colisión)
         if (distancia <= tamano) {
-            // Al inicio de la colisión, causamos daño inmediato y preparamos el temporizador
-            if (!causandoDanio) {
+            if (!causandoDanio) { // Si no estaba causando daño anteriormente
                 causandoDanio = true;
-                causarDanio(personaje); // Daño inicial
-                iniciarTemporizadorDanio(personaje); // Daño periódico
+
+                // Daño instantáneo al entrar en contacto
+                causarDanio(personaje);
+
+                // Inicia el temporizador para daño periódico
+                iniciarTemporizadorDanio(personaje);
             }
         } else {
-            // Si el enemigo ya no está en contacto, detenemos el daño periódico
-            if (causandoDanio) {
+            if (causandoDanio) { // Si estaba causando daño, detenemos el temporizador
                 causandoDanio = false;
-                detenerTemporizadorDanio();
+                detenerTemporizadorDanio(); // Detiene el daño periódico
             }
         }
     }
 
-    // Metodo para causar daño al personaje
-    private void causarDanio(Personaje personaje) {
-        personaje.setVida(personaje.getVida() - 1);
-        System.out.println("El personaje ha recibido daño. Vida restante: " + personaje.getVida());
+    // Inicia el temporizador para aplicar daño periódico
+    private void iniciarTemporizadorDanio(final Personaje personaje) {
+        if (!activo) return; // Si el enemigo no está activo, no inicies el temporizador
+
+        // Configuramos el temporizador para que se ejecute cada 1000 ms (1 segundo)
+        timerDanio = new Timer(1000, e -> {
+            if (!activo) { // Verificar si el enemigo sigue activo
+                detenerTemporizadorDanio();
+            } else if (causandoDanio) { // Solo causa daño si sigue en colisión
+                causarDanio(personaje);
+            }
+        });
+        timerDanio.start(); // Inicia el temporizador
     }
 
-    // Inicia un temporizador que aplica daño cada 500 ms mientras haya colisión
-    private void iniciarTemporizadorDanio(Personaje personaje) {
-        timerDanio = new Timer(500, e -> causarDanio(personaje));
-        timerDanio.start();
-    }
 
-    // Detiene el temporizador de daño periódico
+    // Detiene el temporizador asociado al daño
     private void detenerTemporizadorDanio() {
         if (timerDanio != null) {
-            timerDanio.stop();
-            timerDanio = null;
+            timerDanio.stop(); // Detenemos el temporizador
+            timerDanio = null; // Eliminamos referencia para liberar memoria
         }
+        causandoDanio = false; // Aseguramos que no se registre daño al personaje
+    }
+
+
+    // Causa daño al personaje
+    private void causarDanio(Personaje personaje) {
+        personaje.setVida(personaje.getVida() - 1); // Reduce la vida del personaje
+        System.out.println("El personaje ha recibido daño. Vida restante: " + personaje.getVida());
     }
 
 
@@ -437,9 +456,12 @@ public class Enemigo {
 
     /** Reduce en 1 la vida del enemigo. Si llega a 0, pasa a inactivo (muerto). */
     public void recibirDano() {
+        if (!activo) return;
+
         vida--;
         if (vida <= 0) {
-            activo = false;
+            detenerTemporizadorDanio(); // Detenemos cualquier temporizador activo
+            activo = false; // Marcamos al enemigo como "muerto"
         }
     }
 

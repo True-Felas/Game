@@ -255,7 +255,7 @@ public class Pantalla extends JFrame {
 
     private void terminarPartida() {
         // Mostrar mensaje al jugador
-        JOptionPane.showMessageDialog(this, "¡Has perdido! El juego se reiniciará.", "Fin de la partida", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, "¡Has perdido! El juego se cerrará.", "Fin de la partida", JOptionPane.INFORMATION_MESSAGE);
 
         // Cierra la ventana actual
         this.dispose(); // Cierra la ventana actual y libera recursos asociados
