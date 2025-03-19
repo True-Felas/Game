@@ -27,17 +27,29 @@ public class GestorPistas {
 
 
         // 🔹 Definir las pistas con coordenadas e imágenes
+
+        // ────────────── PISTA UNO: 76 ──────────────
+
         pistas.put("76", new Pista(
                 new Rectangle(1930, 3125, 198, 129),
                 new String[]{"/resources/pistas/76A.png", "/resources/pistas/76B.png"}
         ));
 
-        // ────────────── NUEVA PISTA AÑADIDA ──────────────
+        // ────────────── NUEVA PISTA AÑADIDA: SEGUNDA 190 ──────────────
+
         pistas.put("190", new Pista(
                 new Rectangle(2823, 1283, 251, 228),
                 new String[]{"/resources/pistas/190A.png", "/resources/pistas/190B.png", "/resources/pistas/190C.png"}
         ));
         // ──────────────────────────────────────────────────
+
+        // ────────────── NUEVA PISTA: TERCERA 35 ──────────────
+        pistas.put("35", new Pista(
+                new Rectangle(2689, 3079, 204, 90), // Coordenadas basadas en los datos proporcionados
+                new String[]{"/resources/pistas/35A.png", "/resources/pistas/35B.png", "/resources/pistas/35C.png"}
+        ));
+// ───────────────────────────────────────────────────
+
 
         // 🔹 Inicializar el mapa de pistas vistas (todas comienzan como no vistas)
         for (String clave : pistas.keySet()) {

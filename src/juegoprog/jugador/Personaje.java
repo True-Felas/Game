@@ -23,7 +23,7 @@ public class Personaje extends JPanel {
         // Por defecto, usa el GIF normal
         gifActual = gifNormal;
 
-        this.vida = 3;
+        this.vida = 4;
     }
 
     public Image getImagen() {
