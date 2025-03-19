@@ -122,6 +122,8 @@ public class Enemigo {
     private boolean causandoDanio = false; // Indica si este enemigo está causando daño al jugador
     private Timer timerDanio; // Temporizador para el daño continuo
 
+    private boolean detenido = false; // Indica si el enemigo está detenido
+
     // =========================================================================
     // 1. CONSTRUCTOR
     // =========================================================================
@@ -160,8 +162,7 @@ public class Enemigo {
 
     public void moverHacia(double objetivoXJugador, double objetivoYJugador,
                            ColisionesPanel colisiones, int desplazamientoX, int desplazamientoY) {
-
-        if (!activo) return;  // Si el enemigo está inactivo, no hace nada
+        if (!activo || detenido) return;  // Si el enemigo está inactivo o detenido, no hace nada
 
         double distanciaJugador = Math.hypot(objetivoXJugador - x, objetivoYJugador - y);
 
@@ -173,7 +174,17 @@ public class Enemigo {
         }
     }
 
-    // Este método controla las colisiones entre el enemigo y el personaje
+    // Métodos para modificar el estado "detenido"
+    public void detener() {
+        detenido = true;
+    }
+
+    public void reanudar() {
+        detenido = false;
+    }
+
+
+    // Este metodo controla las colisiones entre el enemigo y el personaje
     public void verificarColision(Personaje personaje) {
         if (!activo) { // Si el enemigo no está activo (muerto), detén el temporizador
             detenerTemporizadorDanio();

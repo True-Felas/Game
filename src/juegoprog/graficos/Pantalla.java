@@ -48,6 +48,9 @@ public class Pantalla extends JFrame {
     private boolean partidaTerminada = false; // Bandera para saber si la partida terminó
 
     private boolean bucleEnEjecucion = true;
+
+    private GestorEnemigos gestorEnemigos; // Añade esta variable
+
     // =========================================================================
     // 2. CONSTRUCTOR Y CONFIGURACIÓN INICIAL
     // =========================================================================
@@ -78,7 +81,7 @@ public class Pantalla extends JFrame {
         setContentPane(contenedorPrincipal);
 
         // Creamos de una vez el gestor de pistas (ligado a esta ventana)
-        gestorPistas = new GestorPistas(this);
+        gestorPistas = new GestorPistas(this, gestorEnemigos);
 
         // ---------------------------------------------------------------------
         // 2.3 Agregar la pantalla del Menú principal
@@ -102,7 +105,7 @@ public class Pantalla extends JFrame {
         capaJuego.add(colisiones, JLayeredPane.PALETTE_LAYER);
 
         // Personaje principal
-       personaje = new Personaje();
+        personaje = new Personaje();
 
         // Control de movimiento (manejador de la lógica principal del juego)
         movimiento = new Movimiento(this, escenario, colisiones, personaje);
@@ -260,7 +263,6 @@ public class Pantalla extends JFrame {
         // Cierra la ventana actual
         this.dispose(); // Cierra la ventana actual y libera recursos asociados
 
-        // Reinicia el programa creando una nueva instancia desde el main
         // Salir del programa de manera limpia
         System.exit(0);
 
