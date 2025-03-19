@@ -46,11 +46,11 @@ public class Cinematica extends JPanel implements ActionListener {
         );
 
         // Timer que actualiza la animación ~ 25 FPS (cada 40 ms)
-        timer = new Timer(40, this);
+        timer = new Timer(50, this);
         timer.start();
 
         // Timer que pasa a la siguiente imagen cada 20 s
-        cambioImagenTimer = new Timer(20000, e -> siguienteImagen());
+        cambioImagenTimer = new Timer(22000, e -> siguienteImagen());
         cambioImagenTimer.start();
 
         // Si se hace clic, empieza el fade out en lugar de cortar en seco
@@ -67,7 +67,7 @@ public class Cinematica extends JPanel implements ActionListener {
     // ===========================================
     private void cargarImagenes() {
         String[] archivos = {
-                "/cinematicas/imagen1.jpg",
+                "/cinematicas/imagen1OB.png",
                 "/cinematicas/imagen2.jpg",
                 "/cinematicas/imagen3.jpg"
         };
