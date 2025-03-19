@@ -269,7 +269,6 @@ public class Pantalla extends JFrame {
 
             // Verificar si las vidas llegaron a 0
             if (personaje.getVida() <= 0) {
-
                 terminarPartida();
             }
         }
