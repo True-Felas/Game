@@ -17,6 +17,7 @@ import juegoprog.controles.Movimiento;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
+import java.util.Random;
 
 /**
  * Clase principal para gestionar la ventana del juego, con distintas 'pantallas' (Menu, Juego, Minijuegos, etc.).
@@ -256,6 +257,7 @@ public class Pantalla extends JFrame {
 
             // Verificar si las vidas llegaron a 0
             if (personaje.getVida() <= 0) {
+
                 terminarPartida();
             }
         }

@@ -248,13 +248,25 @@ public class Enemigo {
         causandoDanio = false; // Aseguramos que no se registre daño al personaje
     }
 
-
     // Causa daño al personaje
     private void causarDanio(Personaje personaje) {
         personaje.setVida(personaje.getVida() - 1); // Reduce la vida del personaje
         System.out.println("El personaje ha recibido daño. Vida restante: " + personaje.getVida());
-    }
 
+        // 🔹 Seleccionar aleatoriamente un sonido de apuñalamiento
+        String[] sonidosCuchillo = {"/audio/Noirknife1.wav", "/audio/Noirknife2.wav", "/audio/Noirknife3.wav"};
+        String sonidoCuchillo = sonidosCuchillo[new Random().nextInt(sonidosCuchillo.length)];
+
+        // 🔹 Reproducir siempre el sonido del cuchillo
+        gestorSonidos.reproducirEfecto(sonidoCuchillo);
+
+        // 🔹 Si la vida es mayor a 0, reproducimos un grito de dolor
+        if (personaje.getVida() > 0) {
+            String[] sonidosGrito = {"/audio/NoirHerida1.wav", "/audio/NoirHerida2.wav", "/audio/NoirHerida3.wav", "/audio/NoirHerida4.wav", "/audio/NoirMuerte1.wav"};
+            String sonidoGrito = sonidosGrito[new Random().nextInt(sonidosGrito.length)];
+            gestorSonidos.reproducirEfecto(sonidoGrito);
+        }
+    }
 
 // =========================================================================
     // 3. PERSECUCIÓN DEL JUGADOR

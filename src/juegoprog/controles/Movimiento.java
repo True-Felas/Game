@@ -493,6 +493,9 @@ public class Movimiento extends JPanel implements ActionListener {
         estaCorriendo = false;
         gestorSonidos.detenerSonido("/audio/NoirStep3b.wav");
         gestorSonidos.detenerSonido("/audio/NoirRun.wav");
+        gestorSonidos.detenerSonido("/audio/NoirHerida1.wav");
+        gestorSonidos.detenerSonido("/audio/NoirHerida2.wav");
+        gestorSonidos.detenerSonido("/audio/NoirHerida3.wav");
 
         System.out.println("[DEBUG] Teclas de movimiento reiniciadas.");
     }
