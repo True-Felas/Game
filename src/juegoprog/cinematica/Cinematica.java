@@ -50,7 +50,7 @@ public class Cinematica extends JPanel implements ActionListener {
         timer.start();
 
         // Timer que pasa a la siguiente imagen cada 20 s
-        cambioImagenTimer = new Timer(22000, e -> siguienteImagen());
+        cambioImagenTimer = new Timer(10900, e -> siguienteImagen());
         cambioImagenTimer.start();
 
         // Si se hace clic, empieza el fade out en lugar de cortar en seco
@@ -68,8 +68,9 @@ public class Cinematica extends JPanel implements ActionListener {
     private void cargarImagenes() {
         String[] archivos = {
                 "/cinematicas/imagen1OB.png",
-                "/cinematicas/imagen2.jpg",
-                "/cinematicas/imagen3.jpg"
+                "/cinematicas/imagen2OB.PNG",
+                "/cinematicas/imagen3OB.PNG",
+                "/cinematicas/imagen4OB.PNG",
         };
 
         for (String archivo : archivos) {
@@ -90,16 +91,30 @@ public class Cinematica extends JPanel implements ActionListener {
     // 3. LOGICA: AVANZAR O FINALIZAR
     // ===========================================
     private void siguienteImagen() {
-        indiceActual++; // Incrementa solo UNA vez
+        new Thread(() -> {
+            // 🔹 Efecto de fade-out antes de cambiar de imagen
+            for (float i = alpha; i >= 0; i -= 0.05f) {
+                alpha = i;
+                repaint();
+                try {
+                    Thread.sleep(50); // Pequeño retraso para suavizar la transición
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
-        if (indiceActual >= imagenes.size()) {
-            // Si nos pasamos del límite
-            indiceActual = imagenes.size() - 1; // Quedarse en la última
-            iniciarFadeOut();                  // Empieza fade out
-        } else {
-            alpha = 0f; // Reinicia fade in
-        }
+            // 🔹 Cambiar de imagen después del fade-out
+            indiceActual++;
+            if (indiceActual >= imagenes.size()) {
+                indiceActual = imagenes.size() - 1;
+                iniciarFadeOut();
+            } else {
+                alpha = 0f; // Reinicia fade-in para la nueva imagen
+            }
+
+        }).start();
     }
+
 
 
     /**
@@ -141,7 +156,7 @@ public class Cinematica extends JPanel implements ActionListener {
             glass.setVisible(true);
 
             // 4) Programamos un Timer de 300 ms (o el tiempo que quieras) que lo oculte
-            Timer t = new Timer(300, e -> {
+            Timer t = new Timer(500, e -> {
                 // Quita el velo negro
                 glass.setVisible(false);
             });
@@ -159,10 +174,10 @@ public class Cinematica extends JPanel implements ActionListener {
         if (!finalizando) {
             // Mientras no estemos finalizando:
             // 1) Incrementar fade in
-            alpha = Math.min(alpha + 0.01f, 1f);
+            alpha = Math.min(alpha + 0.02f, 1f);
 
             // 2) Incrementar zoom, con un valor algo menor para que tiemble menos
-            escala += 0.0001f;
+            escala += 0.0002f;
         } else {
             // Si estamos en fase de fade out, aumentar alphaSalida
             alphaSalida = Math.min(alphaSalida + 0.08f, 1f);
