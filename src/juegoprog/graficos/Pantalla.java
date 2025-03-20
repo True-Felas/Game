@@ -13,7 +13,7 @@ import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.jugador.Personaje;
 import juegoprog.sistema.MenuPrincipal;
 import juegoprog.controles.Movimiento;
-
+import java.util.ArrayList;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Iterator;
@@ -32,6 +32,9 @@ public class Pantalla extends JFrame {
 
     private final CardLayout cardLayout;         // Permite cambiar entre pantallas
     private final JPanel contenedorPrincipal;    // Panel que contiene las distintas pantallas
+
+    // Referencia al panel del juego
+    private JLayeredPane capaJuego;
 
     private final Movimiento movimiento;         // Control principal de movimiento y lógica del personaje
 
@@ -98,7 +101,7 @@ public class Pantalla extends JFrame {
         // ---------------------------------------------------------------------
         // 2.4 Configuración de la pantalla de juego (JLayeredPane con varias capas)
         // ---------------------------------------------------------------------
-        JLayeredPane capaJuego = new JLayeredPane();
+        capaJuego = new JLayeredPane();
         capaJuego.setPreferredSize(new Dimension(1280, 720));
 
         // Fondo del escenario (mapa)
@@ -160,6 +163,30 @@ public class Pantalla extends JFrame {
         setVisible(true);
     }
 
+    private void configurarCursorPersonalizado() {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+
+        // Cargar la imagen del cursor desde los recursos
+        Image cursorImagen = toolkit.getImage(getClass().getResource("/graficos/punteroRojo.png"));
+
+        // Crear el cursor personalizado con el punto activo en el centro
+        Cursor cursorPersonalizado = toolkit.createCustomCursor(
+                cursorImagen,
+                new Point(16, 16), // Punto activo
+                "CursorCruceta"
+        );
+
+        // Establecer el cursor personalizado en el panel del juego
+        capaJuego.setCursor(cursorPersonalizado);
+    }
+
+    private void restaurarCursorPorDefecto() {
+        // Restaura el cursor predeterminado del sistema para toda la ventana
+        capaJuego.setCursor(Cursor.getDefaultCursor());
+    }
+
+
+
     // =========================================================================
     // 3. CAMBIO ENTRE PANTALLAS
     // =========================================================================
@@ -184,10 +211,15 @@ public class Pantalla extends JFrame {
 
         // Regresar al juego (por ejemplo, tras un minijuego)
         if (pantalla.equals("JUEGO")) {
+            configurarCursorPersonalizado();
             movimiento.setEnMinijuego(false);
             // Solicitamos el foco para capturar eventos de teclado en la clase Movimiento
             SwingUtilities.invokeLater(movimiento::requestFocusInWindow);
+        }else {
+            // Restaurar el cursor predeterminado si la pantalla no es la del juego
+            restaurarCursorPorDefecto();
         }
+
     }
 
     // =========================================================================
@@ -246,17 +278,11 @@ public class Pantalla extends JFrame {
         // Solo actualiza si no estamos en cinemática
         if (!enCinematica) {
             movimiento.moverJugador();
-
-            // Verificar las colisiones entre enemigos y el personaje
-            // Iterar sobre los enemigos de manera segura usando CopyOnWriteArrayList
-            for (Enemigo enemigo : GestorEnemigos.getEnemigos()) {
+            // Eliminamos enemigos inactivos de forma segura
+            GestorEnemigos.getEnemigos().removeIf(enemigo -> {
                 enemigo.verificarColision(personaje);
-
-                // Si el enemigo está inactivo, lo eliminamos de la lista
-                if (!enemigo.isActivo()) {
-                    GestorEnemigos.eliminarEnemigo(enemigo);
-                }
-            }
+                return !enemigo.isActivo();
+            });
 
             // Actualizar el panel de vidas si la vida del personaje cambia
             panelVidas.actualizarVidas(personaje.getVida());
@@ -269,6 +295,10 @@ public class Pantalla extends JFrame {
 
         calcularYActualizarFPS();
     }
+
+
+
+
 
 
     private void terminarPartida() {

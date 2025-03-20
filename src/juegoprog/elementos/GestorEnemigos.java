@@ -5,13 +5,12 @@ import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.graficos.Pantalla;
 
 import java.awt.*;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GestorEnemigos {
     private static final CopyOnWriteArrayList<Enemigo> enemigos = new CopyOnWriteArrayList<>(); // Ya es threadsafe
-    private static final int MAX_ENEMIGOS = 20; // Máximo número de enemigos simultáneos
+    private static final int MAX_ENEMIGOS = 15; // Máximo número de enemigos simultáneos
     private final Random random = new Random();
 
     // Coordenadas de los puntos de respawn existentes
@@ -51,20 +50,30 @@ public class GestorEnemigos {
             return;
         }
 
-        // Iterar sobre enemigos de forma segura
-        for (Enemigo enemigo : enemigos) {
+        // Mover a enemigos activos
+        enemigos.forEach(enemigo -> {
             if (enemigo.isActivo()) {
                 enemigo.moverHacia(objetivoX, objetivoY, colisiones, desplazamientoX, desplazamientoY);
-            } else {
-                enemigos.remove(enemigo); // No hay problema al eliminar en CopyOnWriteArrayList
             }
-        }
+        });
 
+        // Eliminar enemigos inactivos de forma segura y reproducir sonido de muerte
+        enemigos.removeIf(enemigo -> {
+            if (!enemigo.isActivo()) {
+                reproducirSonidoMuerte(); // Reproducir sonido cuando un enemigo se elimina
+                return true;
+            }
+            return false;
+        });
+
+        // Generar nuevos enemigos si el total está por debajo del máximo permitido
         while (enemigos.size() < MAX_ENEMIGOS) {
             int[] respawn = puntosRespawn[random.nextInt(puntosRespawn.length)];
             enemigos.add(new Enemigo(gestorSonidos, respawn[0], respawn[1]));
         }
     }
+
+
 
     /**
      * Verifica las colisiones entre los enemigos y las balas.
@@ -72,32 +81,25 @@ public class GestorEnemigos {
      * @param gestorBalas Gestor de balas.
      */
     public void verificarColisiones(GestorBalas gestorBalas) {
-        synchronized (enemigos) { // Bloque sincronizado
-            Iterator<Enemigo> iterador = enemigos.iterator();
-
-            while (iterador.hasNext()) {
-                Enemigo enemigo = iterador.next();
-
-                if (!enemigo.isActivo()) {
-                    iterador.remove(); // Eliminamos enemigos inactivos
-                    continue;
+        enemigos.forEach(enemigo -> {
+            gestorBalas.getBalas().forEach(bala -> {
+                if (enemigo.colisionaCon(bala.getX(), bala.getY())) {
+                    enemigo.recibirDano();
+                    bala.desactivar();
                 }
+            });
+        });
 
-                // Verificar colisiones con las balas
-                gestorBalas.getBalas().forEach(bala -> {
-                    if (enemigo.colisionaCon(bala.getX(), bala.getY())) {
-                        enemigo.recibirDano();
-                        bala.desactivar();
-
-                        if (!enemigo.isActivo()) {
-                            enemigo.desactivar();
-                            reproducirSonidoMuerte();
-                        }
-                    }
-                });
+        // Eliminar enemigos inactivos de forma segura y reproducir sonido de muerte
+        enemigos.removeIf(enemigo -> {
+            if (!enemigo.isActivo()) {
+                reproducirSonidoMuerte(); // Reproducir sonido cuando un enemigo se elimina
+                return true;
             }
-        }
+            return false;
+        });
     }
+
 
     /**
      * Dibuja a todos los enemigos activos en el contexto gráfico.
@@ -119,12 +121,6 @@ public class GestorEnemigos {
      */
     public boolean enemigosEliminados() {
             return enemigos.stream().noneMatch(Enemigo::isActivo);
-    }
-
-
-    // Metodo seguro para eliminar enemigos
-    public static void eliminarEnemigo(Enemigo enemigo) {
-        enemigos.remove(enemigo); // Manipulación segura en CopyOnWriteArrayList
     }
 
 
