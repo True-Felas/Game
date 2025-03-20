@@ -36,6 +36,10 @@ public class FinalMision {
 
     private void mostrarFinal() {
         enFinal = true;
+
+        // 🔹 No reproducimos el sonido aquí
+        // ventana.getGestorSonidos().reproducirEfecto("/audio/NoirEscape.wav");
+
         JFrame finalVentana = new JFrame();
         finalVentana.setUndecorated(true);
         finalVentana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -52,22 +56,21 @@ public class FinalMision {
         panel.add(texto, BorderLayout.NORTH);
 
         finalVentana.add(panel);
-
-        // 🔹 Asegurar que la música previa se detiene y reproducir la locución final
-        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirEscape.wav");
-
         finalVentana.setVisible(true);
 
         finalVentana.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    // 🔹 Aquí reproducimos la locución justo al regresar al menú
+                    ventana.getGestorSonidos().reproducirEfecto("/audio/NoirEscape.wav");
                     cerrarJuego();
                     finalVentana.dispose();
                 }
             }
         });
     }
+
 
     private void cerrarJuego() {
         ventana.getGestorMusica().detenerMusica();  // Detener música de fondo

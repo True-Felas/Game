@@ -281,9 +281,6 @@ public class Movimiento extends JPanel implements ActionListener {
         int personajeRealY = desplazamientoY + SCREEN_HEIGHT / 2;
         personaje.setPosicion(personajeRealX, personajeRealY);
 
-        System.out.println("Coordenadas del jugador: X=" + personajeRealX + ", Y=" + personajeRealY);
-
-
         // 5. Verificar pistas en la posición actual
         gestorPistas.verificarPistas(personajeRealX, personajeRealY);
 

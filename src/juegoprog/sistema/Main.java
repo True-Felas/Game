@@ -7,8 +7,7 @@ import javax.swing.*;
 public class Main {
     public static void main(String[] args) {
 
-        /*🔹 Desactiva el escalado de Windows en Java
-        (Lo dejo como comentario y ya probáis a usarlo)*/
+        /*🔹 Desactiva el escalado de Windows en Java */
          System.setProperty("sun.java2d.uiScale", "1.0");
 
         // En el hilo principal de Swing, inicia la ventana principal
