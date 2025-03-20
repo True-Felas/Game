@@ -52,6 +52,10 @@ public class FinalMision {
         panel.add(texto, BorderLayout.NORTH);
 
         finalVentana.add(panel);
+
+        // 🔹 Asegurar que la música previa se detiene y reproducir la locución final
+        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirEscape.wav");
+
         finalVentana.setVisible(true);
 
         finalVentana.addKeyListener(new KeyAdapter() {

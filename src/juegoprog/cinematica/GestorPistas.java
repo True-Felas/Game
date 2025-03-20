@@ -92,7 +92,6 @@ public class GestorPistas {
         // Detener a los enemigos al entrar en una pista
         detenerEnemigos();
 
-
         JFrame pistaVentana = new JFrame();
         pistaVentana.setUndecorated(true);
         pistaVentana.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -102,8 +101,28 @@ public class GestorPistas {
         JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel(new ImageIcon(Objects.requireNonNull(getClass().getResource(imagenes[0]))));
 
-        // 🔹 Reproducimos sonido al mostrar la primera imagen
-        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPista.wav");
+        // 🔹 Seleccionar la locución según la pista
+        String[] locuciones;
+        switch (clave) {
+            case "76": // Pista 1
+                locuciones = new String[]{"/audio/NoirPist1A.wav", "/audio/NoirPist1B.wav"};
+                break;
+            case "190": // Pista 2
+                locuciones = new String[]{"/audio/NoirPist2A.wav", "/audio/NoirPist2B.wav", "/audio/NoirPist2C.wav"};
+                break;
+            case "35": // Pista 3 (cuando la tengas)
+                locuciones = new String[]{"/audio/NoirPist3A.wav", "/audio/NoirPist3B.wav", "/audio/NoirPist3C.wav"};
+                break;
+            default:
+                locuciones = new String[]{}; // Si no hay locuciones, no se reproduce nada
+                break;
+        }
+
+
+        // 🔹 Reproducimos la locución de la primera imagen
+        if (locuciones.length > 0) {
+            ventana.getGestorSonidos().reproducirEfecto(locuciones[0]);
+        }
 
         panel.add(label, BorderLayout.CENTER);
 
@@ -121,9 +140,14 @@ public class GestorPistas {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && indiceImagen < imagenes.length - 1) {
-                    // 🔹 Cambia a la siguiente imagen si hay más de una
+                    // 🔹 Cambia a la siguiente imagen
                     indiceImagen++;
                     label.setIcon(new ImageIcon(Objects.requireNonNull(getClass().getResource(imagenes[indiceImagen]))));
+
+                    // 🔹 Reproducir la locución correspondiente a esta imagen
+                    if (indiceImagen < locuciones.length) {
+                        ventana.getGestorSonidos().reproducirEfecto(locuciones[indiceImagen]);
+                    }
 
                     // 🔹 Cambia el mensaje cuando sea la última imagen
                     if (indiceImagen == imagenes.length - 1) {
@@ -139,6 +163,7 @@ public class GestorPistas {
             }
         });
     }
+
 
     // ──────────────────────────────────────────────────────────────────────
     // 🔹 Clase interna para manejar las pistas (coordenadas + imágenes)

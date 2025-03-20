@@ -173,7 +173,8 @@ public class Dial extends JPanel {
      * y finalmente regresa a la pantalla del juego. */
     private void desbloquearCajaFuerte() {
         desbloqueado = true;
-        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirOpenSafeF.wav");
+        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPaper.wav");
+        ventana.getGestorSonidos().reproducirEfecto("/audio/NoirDocumentos.wav"); // Añadir esta línea
 
         JOptionPane.showMessageDialog(
                 null,
