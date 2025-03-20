@@ -248,18 +248,13 @@ public class Pantalla extends JFrame {
             movimiento.moverJugador();
 
             // Verificar las colisiones entre enemigos y el personaje
-            // Usamos un iterador en lugar de for-each para evitar ConcurrentModificationException
-            synchronized (GestorEnemigos.getEnemigos()) { // Bloque sincronizado
-                Iterator<Enemigo> iterador = GestorEnemigos.getEnemigos().iterator();
+            // Iterar sobre los enemigos de manera segura usando CopyOnWriteArrayList
+            for (Enemigo enemigo : GestorEnemigos.getEnemigos()) {
+                enemigo.verificarColision(personaje);
 
-                while (iterador.hasNext()) {
-                    Enemigo enemigo = iterador.next();
-                    enemigo.verificarColision(personaje);
-
-                    // Si se desea eliminar/modificar enemigos, esto debe hacerse con el iterador
-                    if (!enemigo.isActivo()) {
-                        iterador.remove();
-                    }
+                // Si el enemigo está inactivo, lo eliminamos de la lista
+                if (!enemigo.isActivo()) {
+                    GestorEnemigos.eliminarEnemigo(enemigo);
                 }
             }
 
@@ -274,6 +269,7 @@ public class Pantalla extends JFrame {
 
         calcularYActualizarFPS();
     }
+
 
     private void terminarPartida() {
 

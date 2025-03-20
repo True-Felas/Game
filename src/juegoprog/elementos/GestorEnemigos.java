@@ -5,14 +5,12 @@ import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.graficos.Pantalla;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GestorEnemigos {
-    private static final List<Enemigo> enemigos = new CopyOnWriteArrayList<>(); // Lista concurrente segura para iteraciones.
+    private static final CopyOnWriteArrayList<Enemigo> enemigos = new CopyOnWriteArrayList<>(); // Ya es threadsafe
     private static final int MAX_ENEMIGOS = 20; // Máximo número de enemigos simultáneos
     private final Random random = new Random();
 
@@ -109,10 +107,8 @@ public class GestorEnemigos {
      * @param desplazamientoY Desplazamiento actual en el eje Y del mapa.
      */
     public void dibujar(Graphics g, int desplazamientoX, int desplazamientoY) {
-        synchronized (enemigos) { // Bloque sincronizado
             for (Enemigo enemigo : enemigos) {
                 enemigo.dibujar(g, desplazamientoX, desplazamientoY);
-            }
         }
     }
 
@@ -122,20 +118,23 @@ public class GestorEnemigos {
      * @return Verdadero si no queda ningún enemigo activo.
      */
     public boolean enemigosEliminados() {
-        synchronized (enemigos) { // Bloque sincronizado
             return enemigos.stream().noneMatch(Enemigo::isActivo);
-        }
     }
+
+
+    // Metodo seguro para eliminar enemigos
+    public static void eliminarEnemigo(Enemigo enemigo) {
+        enemigos.remove(enemigo); // Manipulación segura en CopyOnWriteArrayList
+    }
+
 
     /**
      * Devuelve una copia de la lista de enemigos activos.
      *
      * @return Lista de enemigos activos.
      */
-    public static List<Enemigo> getEnemigos() {
-        synchronized (enemigos) { // Bloque sincronizado
-            return new ArrayList<>(enemigos); // Devolver una copia para asegurar la inmutabilidad
-        }
+    public static CopyOnWriteArrayList<Enemigo> getEnemigos() {
+        return enemigos;
     }
 
     // ------ Metodo para reproducir un sonido de muerte aleatorio ------
