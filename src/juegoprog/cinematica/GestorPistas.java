@@ -45,7 +45,7 @@ public class GestorPistas {
 
         // ────────────── NUEVA PISTA: TERCERA 35 ──────────────
         pistas.put("35", new Pista(
-                new Rectangle(2689, 3079, 204, 90), // Coordenadas basadas en los datos proporcionados
+                new Rectangle(2670, 3079, 230, 120), // Coordenadas basadas en los datos proporcionados
                 new String[]{"/resources/pistas/35A.png", "/resources/pistas/35B.png", "/resources/pistas/35C.png"}
         ));
 // ───────────────────────────────────────────────────

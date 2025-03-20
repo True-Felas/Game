@@ -330,7 +330,7 @@ public class Movimiento extends JPanel implements ActionListener {
 
     /** Si el jugador está cerca de la caja fuerte, se muestra un mensaje para entrar al minijuego. */
     private void gestionarMinijuegoCajaFuerte(int x, int y) {
-        if (x >= 2713 && x <= 2715 && y >= 3809 && y <= 3857) {
+        if (x >= 2700 && x <= 2730 && y >= 3800 && y <= 3860) {
             if (!mostrarMensajeMinijuego) {
                 System.out.println("📍 Pulsa ENTER para acceder al minijuego");
                 mostrarMensajeMinijuego = true;

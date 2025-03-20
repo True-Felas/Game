@@ -11,7 +11,7 @@ public class FinalMision {
     private final Pantalla ventana;
     private boolean enFinal = false;
     private boolean cajaFuerteCompletada;
-    private final Rectangle areaEscape = new Rectangle(1131, 1812, 21, 100); // Coordenadas actualizadas del agujero final
+    private final Rectangle areaEscape = new Rectangle(1120, 1800, 50, 120);
 
     public FinalMision(Pantalla ventana) {
         this.ventana = ventana;

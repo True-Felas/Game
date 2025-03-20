@@ -92,22 +92,33 @@ public class Cinematica extends JPanel implements ActionListener {
     // ===========================================
     private void siguienteImagen() {
         new Thread(() -> {
-            // 🔹 Efecto de fade-out antes de cambiar de imagen
-            for (float i = alpha; i >= 0; i -= 0.05f) {
-                alpha = i;
-                repaint();
-                try {
-                    Thread.sleep(50); // Pequeño retraso para suavizar la transición
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            // Si NO es la última imagen, hacer el fade-out normal
+            if (indiceActual < imagenes.size() - 1) {
+                for (float i = alpha; i >= 0; i -= 0.05f) {
+                    alpha = i;
+                    repaint();
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
-            // 🔹 Cambiar de imagen después del fade-out
+            // Cambiar de imagen después del fade-out (excepto en la última)
             indiceActual++;
+
             if (indiceActual >= imagenes.size()) {
                 indiceActual = imagenes.size() - 1;
-                iniciarFadeOut();
+
+                // 🔹 Si es la última imagen, esperamos más tiempo ANTES del fade-out
+                try {
+                    Thread.sleep(8000); // ⏳ Espera 5 segundos extra antes del fade final
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                iniciarFadeOut(); // 🔹 Luego de la espera, iniciar el fade-out final
             } else {
                 alpha = 0f; // Reinicia fade-in para la nueva imagen
             }
