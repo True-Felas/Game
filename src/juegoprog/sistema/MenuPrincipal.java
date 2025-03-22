@@ -56,14 +56,13 @@ public class MenuPrincipal extends JPanel {
         botonControles.addActionListener(_ -> {
             JOptionPane.showMessageDialog(this,
                     """
-                    CONTROLES DEL JUEGO:
-                    
-                    - W A S D: Mover personaje
-                    - Ratón: Apuntar
-                    - Click izquierdo: Acción / Disparo
-                    - ESC: Pausar / Menú
+                    - W A S D | Mover personaje
+                    - RATÓN | Apuntar
+                    - CLICK IZQ | Disparo
+                    - ESPACIO | Correr
+                    - ENTER | Acción
                     """,
-                    "Controles",
+                    "CONTROLES DEL JUEGO:",
                     JOptionPane.INFORMATION_MESSAGE);
         });
         add(botonControles);
