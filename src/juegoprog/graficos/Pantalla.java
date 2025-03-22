@@ -194,33 +194,44 @@ public class Pantalla extends JFrame {
     /**
      * Cambia entre pantallas (por ejemplo, "MENU", "CINEMATICA", "JUEGO", "MINIJUEGO_CAJA_FUERTE", etc.).
      */
+    private boolean cinematicaYaMostrada = false; // Indica si ya se ha reproducido la cinemática una vez
+
     public void cambiarPantalla(String pantalla) {
         if (pantalla.equals("CINEMATICA")) {
-            // Si venimos de jugar con música, realizamos fade-out
             if (gestorMusica != null) {
-                gestorMusica.fadeOutMusica(2000); // 2 segundos
+                if (!cinematicaYaMostrada) {
+                    gestorMusica.fadeOutMusica(2000);
+                } else {
+                    gestorMusica.detenerMusica(); // corte limpio si es la segunda vez
+                }
             }
-            // 🔹 Activamos la bandera 'enCinematica' para pausar la lógica del juego
+
             setEnCinematica(true);
 
-            // Agregamos la cinemática como pantalla y luego mostramos
-            contenedorPrincipal.add(new Cinematica(this), "CINEMATICA");
+            // Si ya se mostró una vez, usamos la versión sin locución
+            if (!cinematicaYaMostrada) {
+                contenedorPrincipal.add(new Cinematica(this, true), "CINEMATICA");
+                cinematicaYaMostrada = true;
+            } else {
+                contenedorPrincipal.add(new Cinematica(this, false), "CINEMATICA");
+            }
         }
 
         cardLayout.show(contenedorPrincipal, pantalla);
 
-        // Regresar al juego (por ejemplo, tras un minijuego)
+        if (pantalla.equals("MENU")) {
+            gestorMusica.reproducirMusica("/resources/audio/Intro_NoirCity_Find Me Again.wav");
+        }
+
         if (pantalla.equals("JUEGO")) {
             configurarCursorPersonalizado();
             movimiento.setEnMinijuego(false);
-            // Solicitamos el foco para capturar eventos de teclado en la clase Movimiento
             SwingUtilities.invokeLater(movimiento::requestFocusInWindow);
-        }else {
-            // Restaurar el cursor predeterminado si la pantalla no es la del juego
+        } else {
             restaurarCursorPorDefecto();
         }
-
     }
+
 
     // =========================================================================
     // 4. BUCLE PRINCIPAL (LOOP DE JUEGO)

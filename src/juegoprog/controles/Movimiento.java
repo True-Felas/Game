@@ -175,6 +175,11 @@ public class Movimiento extends JPanel implements ActionListener {
                     eventoEnter.run();
                     eventoEnter = null; // Evita repeticiones en bucle
                 }
+
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE && !enMinijuego) {
+                    mostrarConfirmacionSalida();
+                }
+
             }
 
             @Override
@@ -563,6 +568,42 @@ public class Movimiento extends JPanel implements ActionListener {
         g2d.rotate(-anguloRotacion);
         g2d.translate(-SCREEN_WIDTH / 2, -SCREEN_HEIGHT / 2);
     }
+
+    // Mensaje de confirmación de Salida tras pulsar ESCAPE.
+
+    private void mostrarConfirmacionSalida() {
+        JLabel mensaje = new JLabel("<html>¿Quieres volver al menú<br>y dejar la investigación aquí?</html>");
+        mensaje.setFont(new Font("Dialog", Font.PLAIN, 14)); // Cambia a "Courier New" si quieres mantenerlo monoespaciado
+
+        String[] opciones = {"Sí", "No"};
+
+        int opcion = JOptionPane.showOptionDialog(
+                this,
+                mensaje,
+                "Abandonar la escena",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opciones,
+                opciones[1]  // valor por defecto (No)
+        );
+
+        if (opcion == 0) { // opción "Sí"
+            // Reset del estado del juego
+            ventana.getMovimiento().reiniciarDesplazamiento(1280, 720);
+            ventana.getMovimiento().reiniciarTeclas();
+            ventana.getFinalMision().setCajaFuerteCompletada(false);
+
+            // Detener música y sonidos
+            ventana.getGestorSonidos().detenerTodosLosSonidos();
+            ventana.getGestorMusica().detenerMusica();
+
+            // Volver al menú
+            ventana.cambiarPantalla("MENU");
+        }
+    }
+
+
 
     // =========================================================================
     // 16. GETTERS / SETTERS Y OTROS MÉTODOS PÚBLICOS

@@ -21,6 +21,7 @@ public class Cinematica extends JPanel implements ActionListener {
     private final Timer timer;             // Timer principal para animar (fade-in/zoom)
     private final Timer cambioImagenTimer; // Timer para avanzar a la siguiente imagen
     private final Pantalla ventana;        // Referencia al contenedor principal (para cambiar a "JUEGO")
+    private final boolean primeraVez;      // Indica si es la primera vez que se muestra la cinemática
 
     // ---------- Nuevas variables para el "fade out" ----------
     private boolean finalizando = false;   // Indica que estamos en fase de fundido a negro
@@ -30,8 +31,9 @@ public class Cinematica extends JPanel implements ActionListener {
      * Constructor de la Cinemática.
      * Recibe la ventana principal (Pantalla) donde se muestra la animación.
      */
-    public Cinematica(Pantalla ventana) {
+    public Cinematica(Pantalla ventana, boolean primeraVez) {
         this.ventana = ventana;
+        this.primeraVez = primeraVez;
         setOpaque(true);
         setBackground(Color.BLACK);
         setSize(ventana.getSize());
@@ -40,10 +42,15 @@ public class Cinematica extends JPanel implements ActionListener {
 
         cargarImagenes();
 
-        ventana.getGestorMusica().reproducirMusicaSecuencial(
-                "/resources/audio/Noir City - Find Me Again & Tension Intro.wav",
-                "/resources/audio/Noir City - Find Me Again & Tension Loop.wav"
-        );
+        if (primeraVez) {
+            ventana.getGestorMusica().reproducirMusicaSecuencial(
+                    "/resources/audio/Noir City - Find Me Again & Tension Intro.wav",
+                    "/resources/audio/Noir City - Find Me Again & Tension Intro Loop.wav",
+                    ventana
+            );
+        } else {
+            ventana.getGestorMusica().reproducirMusica("/resources/audio/Noir City - Find Me Again & Tension Intro Loop.wav");
+        }
 
         // Timer que actualiza la animación ~ 25 FPS (cada 40 ms)
         timer = new Timer(50, this);
@@ -126,8 +133,6 @@ public class Cinematica extends JPanel implements ActionListener {
         }).start();
     }
 
-
-
     /**
      * Método para iniciar el proceso de “fade out” al finalizar la cinemática
      * (en vez de llamarlo directamente a terminarCinematica).
@@ -175,7 +180,6 @@ public class Cinematica extends JPanel implements ActionListener {
             t.start();
         });
     }
-
 
     // ===========================================
     // 4. EVENTOS DE TIMER: FADE-IN, ZOOM, FADE-OUT

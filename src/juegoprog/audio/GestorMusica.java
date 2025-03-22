@@ -1,18 +1,19 @@
 package juegoprog.audio;
 
+import juegoprog.graficos.Pantalla;
+
 import javax.sound.sampled.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
 public class GestorMusica {
-    private Clip musicaClip; // 🔹 Clip de audio que reproduce la música
+    private Clip musicaClip; // Clip de audio que reproduce la música
+    private LineListener listenerActual;
 
-    /** Reproduce un archivo de música en bucle.
-     * Si ya hay una música sonando, se detiene antes de iniciar la nueva. */
-
+    /** Reproduce un archivo de música en bucle. */
     public void reproducirMusica(String ruta) {
-        detenerMusica(); // Asegurar que no haya música previa
+        detenerMusica();
 
         try {
             URL url = getClass().getResource(ruta);
@@ -21,22 +22,32 @@ public class GestorMusica {
                 return;
             }
 
-            // 🔹 Optimización: Reutilizar Clip si ya existe, sin recrearlo cada vez
-            if (musicaClip == null) {
-                musicaClip = AudioSystem.getClip();
-            }
-
+            musicaClip = AudioSystem.getClip();
             musicaClip.open(AudioSystem.getAudioInputStream(url));
-            musicaClip.loop(Clip.LOOP_CONTINUOUSLY); // 🔹 Se repetirá en bucle
+            musicaClip.loop(Clip.LOOP_CONTINUOUSLY);
             musicaClip.start();
+
+            System.out.println("🎵 Reproduciendo música: " + ruta);
+
         } catch (Exception e) {
             System.err.println("❌ Error al cargar la música: " + e.getMessage());
         }
     }
 
-    /** Reproduce varios archivos enlazados de música en bucle. */
-    public void reproducirMusicaSecuencial(String rutaIntro, String rutaLoop) {
-        detenerMusica(); // Asegurar que no haya música previa
+    /** Reproduce dos archivos de música secuenciales: intro y luego loop. */
+    public void reproducirMusicaSecuencial(String rutaIntro, String rutaLoop, Pantalla ventana) {
+        if (musicaClip != null && musicaClip.isOpen()) {
+            System.out.println("⌛ Clip aún abierto, esperando para iniciar secuencia...");
+
+            new javax.swing.Timer(200, e -> {
+                reproducirMusicaSecuencial(rutaIntro, rutaLoop, ventana);
+            }).start();
+
+            return;
+        }
+
+
+        detenerMusica();
 
         try {
             URL urlIntro = getClass().getResource(rutaIntro);
@@ -45,52 +56,56 @@ public class GestorMusica {
                 return;
             }
 
-            Clip clipIntro = AudioSystem.getClip();
-            clipIntro.open(AudioSystem.getAudioInputStream(urlIntro));
-            clipIntro.start();
+            musicaClip = AudioSystem.getClip();
+            musicaClip.open(AudioSystem.getAudioInputStream(urlIntro));
+            musicaClip.start();
 
-            // Cuando termina la primera canción, empieza la segunda en bucle
-            clipIntro.addLineListener(event -> {
-                if (event.getType() == LineEvent.Type.STOP) {
-                    detenerMusica(); // Detener la música anterior
-                    reproducirMusica(rutaLoop); // Iniciar la versión sin locución en bucle
+            listenerActual = event -> {
+                if (event.getType() == LineEvent.Type.STOP && ventana.isEnCinematica()) {
+                    detenerMusica();
+                    reproducirMusica(rutaLoop);
+                    System.out.println("🔁 Iniciando loop tras intro: " + rutaLoop);
                 }
-            });
+            };
+
+            musicaClip.addLineListener(listenerActual);
 
         } catch (Exception e) {
             System.err.println("❌ Error al cargar la música: " + e.getMessage());
         }
     }
 
-    /** Detiene la música inmediatamente. */
-
+    /** Detiene la música actual y limpia el listener si existe. */
     public void detenerMusica() {
-        if (musicaClip != null && musicaClip.isRunning()) {
+        if (musicaClip != null) {
+            if (listenerActual != null) {
+                musicaClip.removeLineListener(listenerActual);
+                listenerActual = null;
+            }
             musicaClip.stop();
             musicaClip.close();
+            musicaClip = null;
+            System.out.println("⛔ Música detenida.");
         }
     }
 
-    /** Aplica un efecto de fade out antes de detener la música.
-     * Reduce gradualmente el volumen hasta 0 y luego detiene la música. */
-
+    /** Aplica un efecto de fade out antes de detener la música. */
     public void fadeOutMusica(int tiempo) {
         if (musicaClip == null || !musicaClip.isRunning()) return;
 
         FloatControl volumeControl = (FloatControl) musicaClip.getControl(FloatControl.Type.MASTER_GAIN);
         float minVolume = volumeControl.getMinimum();
         float currentVolume = volumeControl.getValue();
-        int pasos = tiempo / 25; // 🔹 Se reduce el tiempo entre pasos para que sea más rápido
+        int pasos = tiempo / 25;
 
-        new javax.swing.Timer(25, new ActionListener() { // 🔹 Ahora cada 25ms en lugar de 50ms
+        new javax.swing.Timer(25, new ActionListener() {
             int contador = 0;
 
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (contador >= pasos) {
                     ((javax.swing.Timer) e.getSource()).stop();
-                    musicaClip.stop();
-                    musicaClip.close();
+                    detenerMusica();
                 } else {
                     float newVolume = currentVolume - ((currentVolume - minVolume) / pasos) * contador;
                     volumeControl.setValue(newVolume);
@@ -100,4 +115,3 @@ public class GestorMusica {
         }).start();
     }
 }
-
