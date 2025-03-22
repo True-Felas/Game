@@ -105,12 +105,15 @@ public class GestorPistas {
         String[] locuciones;
         switch (clave) {
             case "76": // Pista 1
+                ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPista.wav");
                 locuciones = new String[]{"/audio/NoirPist1A.wav", "/audio/NoirPist1B.wav"};
                 break;
             case "190": // Pista 2
+                ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPista.wav");
                 locuciones = new String[]{"/audio/NoirPist2A.wav", "/audio/NoirPist2B.wav", "/audio/NoirPist2C.wav"};
                 break;
             case "35": // Pista 3 (cuando la tengas)
+                ventana.getGestorSonidos().reproducirEfecto("/audio/NoirPista.wav");
                 locuciones = new String[]{"/audio/NoirPist3A.wav", "/audio/NoirPist3B.wav", "/audio/NoirPist3C.wav"};
                 break;
             default:
