@@ -27,8 +27,6 @@ public class GestorMusica {
             musicaClip.loop(Clip.LOOP_CONTINUOUSLY);
             musicaClip.start();
 
-            System.out.println("🎵 Reproduciendo música: " + ruta);
-
         } catch (Exception e) {
             System.err.println("❌ Error al cargar la música: " + e.getMessage());
         }
@@ -85,7 +83,6 @@ public class GestorMusica {
             musicaClip.stop();
             musicaClip.close();
             musicaClip = null;
-            System.out.println("⛔ Música detenida.");
         }
     }
 

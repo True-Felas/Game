@@ -17,7 +17,6 @@ public class PanelVidas extends JPanel {
         if (icono.getIconWidth() == -1) {
             System.err.println("Error: No se pudo cargar la imagen de la vida en " + rutaImagen);
         } else {
-            System.out.println("Imagen cargada correctamente: " + rutaImagen);
             this.imagenVida = icono.getImage().getScaledInstance(225, 225, Image.SCALE_SMOOTH);
         }
 
