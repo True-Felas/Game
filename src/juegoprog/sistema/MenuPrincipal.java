@@ -14,6 +14,16 @@ public class MenuPrincipal extends JPanel {
     private final GestorMusica gestorMusica = new GestorMusica(); // Instancia de música
     private final JLabel titulo; // 🔹 Referencia al título para animarlo
 
+    private Font cargarFuentePersonalizada(String ruta, float tamaño) {
+        try {
+            Font fuente = Font.createFont(Font.TRUETYPE_FONT, Objects.requireNonNull(getClass().getResourceAsStream(ruta)));
+            return fuente.deriveFont(Font.BOLD, tamaño);
+        } catch (Exception e) {
+            System.err.println("Error cargando la fuente: " + ruta);
+            return new Font("Serif", Font.BOLD, (int) tamaño);
+        }
+    }
+
     public MenuPrincipal(JFrame ventana) {
 
         // Cargar la imagen de fondo desde resources
@@ -26,14 +36,38 @@ public class MenuPrincipal extends JPanel {
 
         // 🔹 Crear y animar el título
         titulo = new JLabel("NOIR CITY", SwingConstants.CENTER);
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 50));
+        titulo.setFont(cargarFuentePersonalizada("/resources/fonts/Noir_medium.otf", 50));
         titulo.setForeground(new Color(250, 240, 230));
         titulo.setBounds(300, 20, 700, 80);
         add(titulo);
         animarTitulo(); // 🔹 Llamamos al metodo de animación
 
+
         // Cargar imágenes para los botones
         ImageIcon imgJugar = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Iniciar2.png")));
+
+        // Botón Controles
+        ImageIcon imgControles = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Controles2.png")));
+        JButton botonControles = new JButton(imgControles);
+        botonControles.setBounds(500, 400, 300, 80); // Posición intermedia
+        botonControles.setBorderPainted(false);
+        botonControles.setContentAreaFilled(false);
+        botonControles.setFocusPainted(false);
+        botonControles.addActionListener(_ -> {
+            JOptionPane.showMessageDialog(this,
+                    """
+                    CONTROLES DEL JUEGO:
+                    
+                    - W A S D: Mover personaje
+                    - Ratón: Apuntar
+                    - Click izquierdo: Acción / Disparo
+                    - ESC: Pausar / Menú
+                    """,
+                    "Controles",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        add(botonControles);
+
         ImageIcon imgSalir = new ImageIcon(Objects.requireNonNull(getClass().getResource("/resources/menu/Salir2.png")));
 
 
@@ -42,7 +76,7 @@ public class MenuPrincipal extends JPanel {
 
         // Botón Salir
         JButton botonSalir = new JButton(imgSalir);
-        botonSalir.setBounds(500, 400, 300, 80);
+        botonSalir.setBounds(500, 480, 300, 80);
         botonSalir.setBorderPainted(false);
         botonSalir.setContentAreaFilled(false);
         botonSalir.setFocusPainted(false);
@@ -54,7 +88,7 @@ public class MenuPrincipal extends JPanel {
 
     private JButton getJugar(Pantalla ventana, ImageIcon imgJugar) {
         JButton botonJugar = new JButton(imgJugar);
-        botonJugar.setBounds(500, 300, 300, 80);
+        botonJugar.setBounds(500, 320, 300, 80);
         botonJugar.setBorderPainted(false);
         botonJugar.setContentAreaFilled(false);
         botonJugar.setFocusPainted(false);
@@ -88,5 +122,7 @@ public class MenuPrincipal extends JPanel {
             }
         });
         timer.start();
+
+
     }
 }

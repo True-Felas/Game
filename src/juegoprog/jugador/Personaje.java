@@ -33,7 +33,7 @@ public class Personaje extends JPanel {
     public void cargarGifNormal(String ruta) {
         try {
             ImageIcon original = new ImageIcon(Objects.requireNonNull(getClass().getResource(ruta)));
-            gifNormal = new ImageIcon(original.getImage().getScaledInstance(70, 65, Image.SCALE_DEFAULT));
+            gifNormal = original;  // Cargamos sin escalar
         } catch (Exception e) {
             System.err.println("Error al cargar el GIF normal: " + ruta);
         }
@@ -42,11 +42,12 @@ public class Personaje extends JPanel {
     public void cargarGifCorrer(String ruta) {
         try {
             ImageIcon original = new ImageIcon(Objects.requireNonNull(getClass().getResource(ruta)));
-            gifCorrer = new ImageIcon(original.getImage().getScaledInstance(70, 65, Image.SCALE_DEFAULT));
+            gifCorrer = original;  // Cargamos sin escalar
         } catch (Exception e) {
             System.err.println("Error al cargar el GIF de correr: " + ruta);
         }
     }
+
 
     // Cambiar entre los GIF
     public void setCorrer(boolean corriendo) {
