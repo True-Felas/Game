@@ -113,7 +113,7 @@ public class Pantalla extends JFrame {
         capaJuego.add(niebla, JLayeredPane.POPUP_LAYER);
 
         // Opcional, si quieres más densidad:
-        niebla.setAlpha(0.5f);
+        niebla.setAlpha(0.7f);
 
         // EFECTO PARTÍCULAS
         // 1) Crear e inicializar la instancia
