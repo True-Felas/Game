@@ -5,20 +5,20 @@ import juegoprog.audio.GestorSonidos;
 import juegoprog.cinematica.Cinematica;
 import juegoprog.cinematica.FinalMision;
 import juegoprog.cinematica.GestorPistas;
+import juegoprog.efectos.EfectoNieblaDinamica;
+import juegoprog.efectos.EfectoParticulas;
 import juegoprog.elementos.Dial;
-import juegoprog.elementos.Enemigo;
 import juegoprog.elementos.GestorEnemigos;
 import juegoprog.escenarios.ColisionesPanel;
 import juegoprog.escenarios.EscenarioDistritoSombrio;
 import juegoprog.jugador.Personaje;
 import juegoprog.sistema.MenuPrincipal;
 import juegoprog.controles.Movimiento;
-import java.util.ArrayList;
+
 import javax.swing.*;
 import java.awt.*;
-import java.util.Iterator;
 import java.util.Objects;
-import java.util.Random;
+
 
 /**
  * Clase principal para gestionar la ventana del juego, con distintas 'pantallas' (Menu, Juego, Minijuegos, etc.).
@@ -60,6 +60,8 @@ public class Pantalla extends JFrame {
     // Pantalla final del juego antes de regresar al menú.
     private FinalMision finalMision;
 
+    private EfectoNieblaDinamica niebla;
+    private EfectoParticulas particulas;
 
     // =========================================================================
     // 2. CONSTRUCTOR Y CONFIGURACIÓN INICIAL
@@ -104,6 +106,26 @@ public class Pantalla extends JFrame {
         capaJuego = new JLayeredPane();
         capaJuego.setPreferredSize(new Dimension(1280, 720));
 
+        // EFECTO NIEBLA
+        niebla = new EfectoNieblaDinamica();
+        niebla.setBounds(0, 0, 4472, 4816);
+        // La añadimos en una capa por encima del escenario
+        capaJuego.add(niebla, JLayeredPane.POPUP_LAYER);
+
+        // Opcional, si quieres más densidad:
+        niebla.setAlpha(0.5f);
+
+        // EFECTO PARTÍCULAS
+        // 1) Crear e inicializar la instancia
+        particulas = new EfectoParticulas(4472, 4816, 350);
+        particulas.setBounds(0, 0, 4472, 4816);
+        // Añadir en la capa que quieras, por ejemplo una capa por debajo de la niebla
+        capaJuego.add(particulas, JLayeredPane.PALETTE_LAYER);
+
+        // 2) (Opcional) Establecer una densidad base
+        particulas.setDensidad(0.5f);
+
+
         // Fondo del escenario (mapa)
         EscenarioDistritoSombrio escenario = new EscenarioDistritoSombrio();
         escenario.setBounds(0, 0, 4472, 4816);
@@ -117,6 +139,8 @@ public class Pantalla extends JFrame {
         // Personaje principal
         personaje = new Personaje();
         finalMision = new FinalMision(this);
+
+
         // Control de movimiento (manejador de la lógica principal del juego)
         movimiento = new Movimiento(this, escenario, colisiones, personaje, finalMision);
         movimiento.setBounds(0, 0, 1280, 720);
@@ -126,6 +150,7 @@ public class Pantalla extends JFrame {
         Minimapa minimapa = new Minimapa(personaje, 4472, 4816);
         minimapa.setBounds(getWidth() - 237, getHeight() - 280, 217, 236);
         capaJuego.add(minimapa, JLayeredPane.DRAG_LAYER); // Se coloca por encima de las capas base
+
 
         // Crear el panel de vidas
         panelVidas = new PanelVidas(3, "/resources/graficos/Vida2.png"); // Inicia con 3 vidas
@@ -145,8 +170,6 @@ public class Pantalla extends JFrame {
         // ---------------------------------------------------------------------
         tejados = new ImageIcon(Objects.requireNonNull(
                 getClass().getResource("/escenarios/tejados_distrito_sombrio.png"))).getImage();
-
-
 
 
         gestorMusica = new GestorMusica();
@@ -399,5 +422,12 @@ public class Pantalla extends JFrame {
 
     public FinalMision getFinalMision() { return finalMision; }
 
+    // NUEVO: Un getter para que Movimiento pueda acceder a la niebla
+    public EfectoNieblaDinamica getNiebla() {
+        return niebla;
+    }
 
+    public EfectoParticulas getParticulas() {
+        return particulas;
+    }
 }

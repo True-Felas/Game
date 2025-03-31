@@ -452,6 +452,10 @@ public class Movimiento extends JPanel implements ActionListener {
             escenario.actualizarDesplazamiento(desplazamientoX, desplazamientoY);
             colisiones.actualizarOffset(desplazamientoX, desplazamientoY);
         }
+        // --- NUEVO: mover la niebla del mismo modo
+        ventana.getNiebla().actualizarDesplazamiento(desplazamientoX, desplazamientoY);
+        ventana.getParticulas().setLocation(-desplazamientoX, -desplazamientoY);
+
     }
 
     // =========================================================================
@@ -623,6 +627,15 @@ public class Movimiento extends JPanel implements ActionListener {
     public void agregarEventoEnter(Runnable accion) {
         this.eventoEnter = accion;
     }
+
+    public int getDesplazamientoX() {
+        return desplazamientoX;
+    }
+
+    public int getDesplazamientoY() {
+        return desplazamientoY;
+    }
+
 
     // =========================================================================
     // 17. METODO DE LA INTERFAZ ActionListener (SI SE NECESITA)
